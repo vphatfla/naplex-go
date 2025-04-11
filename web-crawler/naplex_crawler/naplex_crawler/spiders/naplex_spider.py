@@ -1,4 +1,5 @@
 import scrapy
+from urllib.parse import urljoin
 from scrapy.loader import ItemLoader
 from naplex_crawler.items import QuestionItem
 import re
@@ -21,10 +22,13 @@ class NaplexSpider(scrapy.Spider):
                 'Sec-Fetch-User': '?1',
                 'Cache-Control': 'max-age=0',
                 }
-    url = 'https://www.accessmedicinenetwork.com/channels/naplex-review-question-of-the-week'
+    start_url = 'https://www.accessmedicinenetwork.com/channels/naplex-review-question-of-the-week'
 
-    def start_requests(self, cookies={}):
-        yield scrapy.Request(url=self.url, callback=self.parse_page, headers=self.headers, cookies=cookies)
+    def start_requests(self, url='', cookies={}):
+        if url == '':
+            url = self.start_url
+        self.logger.info(f"Doing request with url = {url}cookies  = {cookies}")
+        yield scrapy.Request(url=url, callback=self.parse_page, headers=self.headers, cookies=cookies)
 
     def parse_page(self, response):
         """Start parsing the page in url, but first must check for encoding"""
@@ -46,20 +50,21 @@ class NaplexSpider(scrapy.Spider):
 
         cookies_array = result_response.headers.getlist('Set-Cookie')[0].decode("utf-8").split(";")[0].split("=")
         cookies = {}
-        if len(cookie_array) >= 2:
+        self.logger.info(f"Cookies array = {cookies_array}")
+        if len(cookies_array) >= 2:
             # Create a dictionary with the first element as key and second as value
-            cookies = {cookie_array[0]: cookie_array[1]}
+            cookies = {cookies_array[0]: cookies_array[1]}
         # Parse the questions
-        for article in result_response.css('article.content-card'):
+        """ for article in result_response.css('article.content-card'):
             headline = article.css('h1.content-card_headline a')
             if headline:
                 question_url = headline.attrib('href')
                 yield response.follow(question_url, self.parse_question)
-
+        """
         next_page = response.css('a.next_page::attr(href)').get()
         if next_page:
-            yield response.follow(next_page, self.parse, cookies)
-
+            return scrapy.Request(url=urljoin(response.url,next_page), callback=self.parse_page, headers=self.headers, cookies=cookies) 
+        # self.start_requests(url=next_page, cookies=cookies)
     def parse_question(self, response):
         self.logger.info("parsing question")
         """Parse func for individual question"""
