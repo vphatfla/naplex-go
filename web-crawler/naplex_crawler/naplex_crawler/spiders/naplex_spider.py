@@ -55,18 +55,26 @@ class NaplexSpider(scrapy.Spider):
             # Create a dictionary with the first element as key and second as value
             cookies = {cookies_array[0]: cookies_array[1]}
         # Parse the questions
-        """ for article in result_response.css('article.content-card'):
-            headline = article.css('h1.content-card_headline a')
+        for article in result_response.css('article.content-card'):
+            self.logger.info(f'Article {article}')
+            headline = article.css('h1.content-card__headline')
+            self.logger.info(f'H1 = {headline}')
             if headline:
-                question_url = headline.attrib('href')
-                yield response.follow(question_url, self.parse_question)
-        """
+                question_url = headline.css('a::attr(href)').get()
+                self.logger.info(f'Requesting question {question_url}')
+                yield scrapy.Request(urljoin(response.url, question_url),
+                                             callback=self.parse_question,
+                                             headers=self.headers,
+                                             cookies=cookies)
+
         next_page = response.css('a.next_page::attr(href)').get()
         if next_page:
-            return scrapy.Request(url=urljoin(response.url,next_page), callback=self.parse_page, headers=self.headers, cookies=cookies) 
+            self.logger.info(f'Requesting next page {next_page}')
+            return
+        #yield scrapy.Request(url=urljoin(response.url,next_page), callback=self.parse_page, headers=self.headers, cookies=cookies)
         # self.start_requests(url=next_page, cookies=cookies)
     def parse_question(self, response):
-        self.logger.info("parsing question")
+        self.logger.info("Start parsing question")
         """Parse func for individual question"""
         loader = ItemLoader(item=QuestionItem(), response=response)
 
