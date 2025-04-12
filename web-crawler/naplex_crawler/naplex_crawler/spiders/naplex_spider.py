@@ -56,9 +56,7 @@ class NaplexSpider(scrapy.Spider):
             cookies = {cookies_array[0]: cookies_array[1]}
         # Parse the questions
         for article in result_response.css('article.content-card'):
-            self.logger.info(f'Article {article}')
             headline = article.css('h1.content-card__headline')
-            self.logger.info(f'H1 = {headline}')
             if headline:
                 question_url = headline.css('a::attr(href)').get()
                 self.logger.info(f'Requesting question {question_url}')
@@ -80,13 +78,15 @@ class NaplexSpider(scrapy.Spider):
 
         loader.add_css('title', 'h1.content_headeline::text')
 
-        content_div = response.css('div[data-zapnito-article].content_body')
+        content_div = response.css('div[data-zapnito-article]')
+        self.logger.info(f'Content_div {content_div}')
         if content_div:
             paragraphs = []
             for p in content_div.css('p'):
-                span = p.css('span')
-                if span:
-                    text = span('::text').getall()
+                self.logger.info(f'p = {p}')
+                for span in p.css('span'):
+                    text = span.css('::text').get()
+                    self.logger.info(f'text = {text}')
                     if text:
                         clean_text = ' '.join([t.strip() for t in text if t.strip()])
                         clean_text = re.sub(r'\s+', ' ', clean_text).strip()
@@ -94,6 +94,6 @@ class NaplexSpider(scrapy.Spider):
                             paragraphs.append(clean_text)
 
             content = '\n\n'.join(paragraphs)
-            loader.load_value('raw_text', content)
+            loader.add_value('raw_text', content)
 
         return loader.load_item()

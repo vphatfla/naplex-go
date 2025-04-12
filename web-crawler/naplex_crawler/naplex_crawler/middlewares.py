@@ -16,6 +16,7 @@ class JsonWritePipeline:
     """Pipeline to store questions as JSON"""
 
     def open_spider(self, spider):
+        self.logger.info(f'Making dir ')
         output_dir = 'output'
         os.makedirs(output_dir, exist_ok=True)
 
