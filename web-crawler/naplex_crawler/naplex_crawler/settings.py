@@ -44,9 +44,9 @@ COOKIES_ENABLED = True
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    "naplex_crawler.middlewares.NaplexCrawlerSpiderMiddleware": 543,
-#}
+SPIDER_MIDDLEWARES = {
+    "naplex_crawler.middlewares.NaplexCrawlerSpiderMiddleware": 543,
+}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
@@ -63,7 +63,7 @@ COOKIES_ENABLED = True
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    "naplex_crawler.pipelines.NaplexCrawlerPipeline": 300,
+    "naplex_crawler.pipelines.JsonWritePipeline": 300,
 }
 
 LOG_LEVEL = 'INFO'

@@ -5,35 +5,13 @@
 
 import json
 import os
-from datatime import datatime
+from datetime import datetime
 from scrapy import signals
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
 
 
-class JsonWritePipeline:
-    """Pipeline to store questions as JSON"""
-
-    def open_spider(self, spider):
-        self.logger.info(f'Making dir ')
-        output_dir = 'output'
-        os.makedirs(output_dir, exist_ok=True)
-
-        timestamp = datatime.now().strftime('%Y%m%d_%H%M%S')
-        self.json_file = open(f'{output_dir}/naplex_questions_{timestamp}.json', 'w')
-        self.text_file = open(f'{output_dir}/naplex_questions_{timestamp}.txt', 'w')
-        self.items = []
-
-    def close_spider(self, spider):
-        """ Save questions when spider is closed"""
-        json.dump(self.items, self.json_file, indent=2, ensure_ascii=False)
-        self.json_file.close()
-
-    def process_item(self, item, spider):
-        """Process logic"""
-        self.items.append(dict(item))
-        return item
 class NaplexCrawlerSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
