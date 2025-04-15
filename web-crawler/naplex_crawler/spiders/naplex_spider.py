@@ -4,6 +4,8 @@ from scrapy.loader import ItemLoader
 from naplex_crawler.items import QuestionItem
 import re
 import brotli
+from w3lib.html import remove_tags
+
 
 class NaplexSpider(scrapy.Spider):
     """Spider for scraping questions"""
@@ -76,24 +78,33 @@ class NaplexSpider(scrapy.Spider):
         """Parse func for individual question"""
         loader = ItemLoader(item=QuestionItem(), response=response)
 
-        loader.add_css('title', 'h1.content_headeline::text')
+        title = response.css('h1.content__headline::text').get()
+        self.logger.info(f'Title = {title}')
+        loader.add_value('title', title)
 
-        content_div = response.css('div[data-zapnito-article]')
-        self.logger.info(f'Content_div {content_div}')
-        if content_div:
-            paragraphs = []
-            for p in content_div.css('p'):
-                self.logger.info(f'p = {p}')
-                for span in p.css('span'):
-                    text = span.css('::text').get()
-                    self.logger.info(f'text = {text}')
-                    if text:
-                        clean_text = ' '.join([t.strip() for t in text if t.strip()])
-                        clean_text = re.sub(r'\s+', ' ', clean_text).strip()
-                        if clean_text:
-                            paragraphs.append(clean_text)
+        article_div = response.css('div[data-zapnito-article]')
 
-            content = '\n\n'.join(paragraphs)
-            loader.add_value('raw_text', content)
+        if not article_div:
+            self.logger.warning("No div with data-zapnito-article attribute found")
+            return
+
+        # Get all paragraph texts, handling nested tags
+        clean_paragraphs = []
+
+        for p in article_div.css('p'):
+            # Get the HTML content of the paragraph with all nested elements
+            p_html = p.get()
+
+            if p_html:
+                # Remove all HTML tags while preserving their text content
+                clean_text = remove_tags(p_html)
+
+                # Normalize whitespace (remove extra spaces, tabs, newlines)
+                clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+
+                if clean_text:  # Only include non-empty paragraphs
+                    clean_paragraphs.append(clean_text)
+
+        loader.add_value('raw_text', '\n'.join(clean_paragraphs))
 
         return loader.load_item()
