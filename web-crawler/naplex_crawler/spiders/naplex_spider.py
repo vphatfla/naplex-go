@@ -70,8 +70,7 @@ class NaplexSpider(scrapy.Spider):
         next_page = response.css('a.next_page::attr(href)').get()
         if next_page:
             self.logger.info(f'Requesting next page {next_page}')
-            return
-        #yield scrapy.Request(url=urljoin(response.url,next_page), callback=self.parse_page, headers=self.headers, cookies=cookies)
+            yield scrapy.Request(url=urljoin(response.url,next_page), callback=self.parse_page, headers=self.headers, cookies=cookies)
         # self.start_requests(url=next_page, cookies=cookies)
     def parse_question(self, response):
         self.logger.info("Start parsing question")
