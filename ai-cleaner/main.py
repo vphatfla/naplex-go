@@ -5,7 +5,7 @@ from google import genai
 
 logging.basicConfig(
         level=logging.INFO,  # Set the logging level
-        format='%(asctime)s - %(message)s',
+        format='%(asctime)s>>>    %(message)s',
         handlers=[
             logging.StreamHandler(),  # This adds console output
             ]
