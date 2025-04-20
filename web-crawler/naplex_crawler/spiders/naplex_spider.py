@@ -77,7 +77,7 @@ class NaplexSpider(scrapy.Spider):
         """Parse func for individual question"""
         loader = ItemLoader(item=QuestionItem(), response=response)
 
-        title = response.css('h1.content__headline::text').get()
+        title = response.css('h1.content__headline::text').get().split(':',1)[1].strip()
         self.logger.info(f'Title = {title}')
         loader.add_value('title', title)
 
