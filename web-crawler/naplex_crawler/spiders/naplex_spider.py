@@ -29,7 +29,7 @@ class NaplexSpider(scrapy.Spider):
     def start_requests(self, url='', cookies={}):
         if url == '':
             url = self.start_url
-        self.logger.info(f"Doing request with url = {url}cookies  = {cookies}")
+        self.logger.info(f"Doing request with url = {url} \n cookies  = {cookies}")
         yield scrapy.Request(url=url, callback=self.parse_page, headers=self.headers, cookies=cookies)
 
     def parse_page(self, response):
@@ -80,6 +80,8 @@ class NaplexSpider(scrapy.Spider):
         title = response.css('h1.content__headline::text').get().split(':',1)[1].strip()
         self.logger.info(f'Title = {title}')
         loader.add_value('title', title)
+
+        loader.add_value('link', response.url)
 
         article_div = response.css('div[data-zapnito-article]')
 

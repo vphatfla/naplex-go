@@ -66,8 +66,26 @@ class JsonWritePipeline:
         """
         self.logger.info(f'Closing spider, closing connection')
         self.db.close_all_connections()
+
     def process_item(self, item, spider):
         """Process logic"""
-        self.items.append(dict(item))
-        return item
+        query = """
+        INSERT INTO naplex_data.raw_questions (title, raw_question, link)
+        VALUES (%s, %s, %s)
+        """
+
+        # Execute the query with parameters from the item dictionary
+        # Map the raw_text field from item to raw_question column in DB
+        params = (item.get('title'), item.get('raw_text'), item.get('link'))
+
+        try:
+            # Execute the query and return the affected rows count
+            # Set fetch=False since this is an INSERT statement
+            self.logger.info(f'Writing to db item :: {item.get('title')} at {item.get('link')}')
+            result = self.db.execute_query(query, params, fetch=False)
+            self.logger.info(f'Result writing {result}')
+        except Exception as e:
+            # Log the error and re-raise
+            self.logger.info(f"Error inserting item into raw_questions: {str(e)}")
+            raise
 

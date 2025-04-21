@@ -12,6 +12,7 @@ class QuestionItem(scrapy.Item):
     list_choice = scrapy.Field()
     correct_answer = scrapy.Field()
     raw_text = scrapy.Field()
+    link = scrapy.Field()
 class NaplexCrawlerItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
