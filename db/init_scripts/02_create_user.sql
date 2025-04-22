@@ -17,3 +17,6 @@ GRANT ALL PRIVILEGES ON TABLES TO naplex_user;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA naplex_data
 GRANT ALL PRIVILEGES ON SEQUENCES TO naplex_user;
+
+-- Set search_path permanently for the user
+ALTER ROLE naplex_user SET search_path TO naplex_data;
