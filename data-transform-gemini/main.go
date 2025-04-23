@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/google/generative-ai-go/genai"
@@ -69,6 +70,18 @@ func main() {
 			log.Printf("Token count for this candidates %v", c.TokenCount)
 			for _, part := range c.Content.Parts {
 				log.Println(part)
+
+				if txt, ok := part.(genai.Text); ok {
+					var temp  db.ProcessedQuestion
+					err := json.Unmarshal([]byte(txt), &temp)
+					if err != nil {
+						log.Fatal(err)
+					}
+					log.Printf("%v", temp)
+
+				} else {
+					log.Println("Can't cast res to txt")
+				}
 			}
 		}
 	}
