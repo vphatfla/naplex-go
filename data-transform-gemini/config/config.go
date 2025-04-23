@@ -38,6 +38,7 @@ func LoadConfig() (*Config) {
 		},
 		GeminiConfig{
 			APIKEY: os.Getenv("GEMINI_API_KEY"),
+			Model: os.Getenv("GEMINI_MODEL"),
 		},
 	}
 }
