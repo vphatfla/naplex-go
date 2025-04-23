@@ -8,11 +8,11 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/vphatfla/naplex-go/data-transform-gemini/config"
 )
 
-func NewPool(ctx context.Context) (*pgxpool.Pool, error) {
-
-	config, err := pgxpool.ParseConfig("postgres://naplex_user:password@localhost:5432/app_db")
+func NewPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(cfg.DB.ToURLString())
 	if err != nil {
 		return nil, err
 	}

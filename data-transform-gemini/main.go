@@ -5,14 +5,23 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/joho/godotenv"
+	"github.com/vphatfla/naplex-go/data-transform-gemini/config"
 	"github.com/vphatfla/naplex-go/data-transform-gemini/db"
 )
 
 func main() {
 	fmt.Println("Hello from naplex data transformer")
+	err := godotenv.Load()
+
+	cfg := config.LoadConfig()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx := context.Background()
 
-	pool, err := db.NewPool(ctx)
+	pool, err := db.NewPool(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
