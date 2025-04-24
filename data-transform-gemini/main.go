@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"sync"
 
-	"github.com/google/generative-ai-go/genai"
 	"github.com/joho/godotenv"
 	"github.com/vphatfla/naplex-go/data-transform-gemini/config"
 	"github.com/vphatfla/naplex-go/data-transform-gemini/db"
@@ -27,7 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Database info >>>  Successfully created database connection pool!")
+	log.Println("Database >>>  Successfully created database connection pool!")
 	defer pool.Close()
 
 	client, err := gemini.NewClient(ctx, cfg)
@@ -35,62 +35,55 @@ func main() {
 		log.Fatal(nil)
 	}
 	defer client.Close()
-	log.Println("Gemini info >>> Successfully initilize gemini ai client!")
+	log.Println("Gemini >>> Successfully initilize gemini ai client!")
 
 	queries := db.New(pool)
 
-	r, err := queries.GetRawQuestioniByID(ctx, 2)
+	t, err  := queries.CountRawQuestion(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
+	total := int(t)
+	total = 5
 
-	model := client.GenerativeModel(cfg.Gemini.Model)
-	model.ResponseMIMEType = "application/json"
-	prompt := `Process this pharmacy exam question into a JSON object:
-	- "title": Brief descriptive title (e.g., "Vancomycin Dosing")
-	- "question": Full question text with patient case
-	- "multipleChoices": Format as "A. [text] B. [text] C. [text] D. [text]"
-	- "correctAnswer": Letter + text (e.g., "B. 1000 mg IV q12h")
-	- "explanation": Rationale for correct answer
-	- "keywords": Single string with 2-4 terms separated by commas only without spaces (e.g., "vancomycin,dosing,antimicrobial")
+	var wg sync.WaitGroup
 
-	Remove any '+' line endings and database artifacts.`+ r.RawQuestion
-	res, err := model.GenerateContent(ctx, genai.Text(prompt))
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Response from gemini");
-	for _, c := range res.Candidates {
-		if c != nil {
-			log.Printf("Token count for this candidates %v", c.TokenCount)
-			for _, part := range c.Content.Parts {
-				// log.Println(part)
+	for start  := 1; start <= total; start += 10{
+		end := min(start + 9, total)
+		rawQuestions, err := queries.GetRawQuestionWithRange(ctx,
+			db.GetRawQuestionWithRangeParams{
+				ID: int32(start),
+				ID_2: int32(end),
+			})
+		if err != nil {
+			log.Printf("Error getting raw questions from %v to %v -->  %v", start, end, err)
+			continue
+		}
 
-				if txt, ok := part.(genai.Text); ok {
-					var temp  db.ProcessedQuestion
-					err := json.Unmarshal([]byte(txt), &temp)
-					if err != nil {
-						log.Fatal(err)
-					}
-					
-					jsonData, err := json.Marshal(temp)
-					if err != nil {
-						log.Fatal(err)
-					}
-					log.Printf("%v", string(jsonData))
-				} else {
-					log.Println("Can't cast res to txt")
+		for _,rQ := range rawQuestions {
+			wg.Add(1)
+			go func(rq db.RawQuestion) {
+				log.Printf("Requesting content for raw questions id %v", rQ.ID)
+				m := gemini.NewModelJson(client, cfg)
+				txt, err := gemini.GetContent(ctx, m, rQ.RawQuestion)
+				if err != nil {
+					log.Printf("err -> %v", err)
+					return
 				}
-			}
+
+				var temp db.ProcessedQuestion
+				err = json.Unmarshal([]byte(txt), &temp)
+				if err != nil {
+					log.Panic(err)
+				}
+				log.Printf("Successfully Unmarshal for raw question id = %v", temp.ID)
+				log.Printf("%+v", temp)
+				wg.Done()
+				return
+			}(rQ)
 		}
 	}
-	/* queries := db.New(pool)
 
-	r, err := queries.GetRawQuestioniByID(ctx, 2)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Result = %v", r)
-	*/
+	wg.Wait()
+	return
 }

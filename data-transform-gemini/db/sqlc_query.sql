@@ -1,7 +1,13 @@
--- name: GetRawQuestioniByID :one
+-- name: CountRawQuestion :one
+SELECT COUNT(id) FROM raw_questions;
+
+-- name: GetRawQuestionByID :one
 SELECT * FROM raw_questions
 WHERE id=$1 LIMIT 1;
 
+-- name: GetRawQuestionWithRange :many
+SELECT * FROM raw_questions
+WHERE id >= $1 AND id <= $2;
 -- name: InsertRawQuestion :one
 INSERT INTO raw_questions (title, raw_question, link)
 VALUES ($1, $2, $3)

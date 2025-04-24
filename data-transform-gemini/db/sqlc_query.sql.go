@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countRawQuestion = `-- name: CountRawQuestion :one
+SELECT COUNT(id) FROM raw_questions
+`
+
+func (q *Queries) CountRawQuestion(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countRawQuestion)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getProcessedQuestionByID = `-- name: GetProcessedQuestionByID :one
 SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords FROM processed_questions WHERE id = $1
 `
@@ -30,13 +41,13 @@ func (q *Queries) GetProcessedQuestionByID(ctx context.Context, id int32) (Proce
 	return i, err
 }
 
-const getRawQuestioniByID = `-- name: GetRawQuestioniByID :one
+const getRawQuestionByID = `-- name: GetRawQuestionByID :one
 SELECT id, title, raw_question, link FROM raw_questions
 WHERE id=$1 LIMIT 1
 `
 
-func (q *Queries) GetRawQuestioniByID(ctx context.Context, id int32) (RawQuestion, error) {
-	row := q.db.QueryRow(ctx, getRawQuestioniByID, id)
+func (q *Queries) GetRawQuestionByID(ctx context.Context, id int32) (RawQuestion, error) {
+	row := q.db.QueryRow(ctx, getRawQuestionByID, id)
 	var i RawQuestion
 	err := row.Scan(
 		&i.ID,
@@ -45,6 +56,41 @@ func (q *Queries) GetRawQuestioniByID(ctx context.Context, id int32) (RawQuestio
 		&i.Link,
 	)
 	return i, err
+}
+
+const getRawQuestionWithRange = `-- name: GetRawQuestionWithRange :many
+SELECT id, title, raw_question, link FROM raw_questions
+WHERE id >= $1 AND id <= $2
+`
+
+type GetRawQuestionWithRangeParams struct {
+	ID   int32
+	ID_2 int32
+}
+
+func (q *Queries) GetRawQuestionWithRange(ctx context.Context, arg GetRawQuestionWithRangeParams) ([]RawQuestion, error) {
+	rows, err := q.db.Query(ctx, getRawQuestionWithRange, arg.ID, arg.ID_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RawQuestion
+	for rows.Next() {
+		var i RawQuestion
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.RawQuestion,
+			&i.Link,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const insertProcessedQuestion = `-- name: InsertProcessedQuestion :one
