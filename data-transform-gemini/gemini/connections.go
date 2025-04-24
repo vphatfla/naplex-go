@@ -25,14 +25,21 @@ func NewModelJson(client *genai.Client, cfg *config.Config) *genai.GenerativeMod
 }
 
 func GetContent(ctx context.Context, model *genai.GenerativeModel, rawQuestionTxt string) (string, error) {
-	prompt := `Process this pharmacy exam question into a JSON object:
-	- "title": Brief descriptive title (e.g., "Vancomycin Dosing")
-	- "question": Full question text with patient case
-	- "multipleChoices": Format as "A. [text] B. [text] C. [text] D. [text]"
-	- "correctAnswer": Letter + text (e.g., "B. 1000 mg IV q12h")
-	- "explanation": Rationale for correct answer
-	- "keywords": Single string with 2-4 terms separated by commas only without spaces (e.g., "vancomycin,dosing,antimicrobial")
-	Remove any '+' line endings and database artifacts.`+ rawQuestionTxt
+	prompt := `Process this pharmacy exam question into a SINGLE JSON object:
+	{
+		"question": "The complete question text including case details and patient data",
+		"multipleChoices": "All options formatted exactly as 'A. [text] B. [text] C. [text] D. [text]'",
+		"correctAnswer": "The correct answer letter and text",
+		"explanation": "FULL explanation including rationales for ALL answers (correct and incorrect)",
+		"keywords": "term1,term2,term3,term4"
+	}
+
+	IMPORTANT:
+	1. Include ALL explanations for both correct AND incorrect answers in the explanation field
+	2. Return ONLY this single JSON object, not wrapped in an array
+	3. For keywords, provide a comma-separated string without spaces (e.g., "acromegaly,octreotide,growthhormone")
+	4. Do not omit any details from the original question text
+	Remove any '+' line endings and database artifacts.` + rawQuestionTxt
 	res, err := model.GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
 		return "", err

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/joho/godotenv"
@@ -44,7 +45,7 @@ func main() {
 		log.Fatal(err)
 	}
 	total := int(t)
-	total = 5
+	total = 10
 
 	var wg sync.WaitGroup
 
@@ -61,9 +62,13 @@ func main() {
 		}
 
 		for _,rQ := range rawQuestions {
+			if strings.Contains(rQ.Title, "Preparing for Success") {
+				log.Printf("Skipping id %v title %v", rQ.ID, rQ.Title)
+				continue
+			}
 			wg.Add(1)
-			go func(rq db.RawQuestion) {
-				log.Printf("Requesting content for raw questions id %v", rQ.ID)
+			go func(rQ db.RawQuestion) {
+				log.Printf("Requesting content for raw questions id %v title %v", rQ.ID, rQ.Title)
 				m := gemini.NewModelJson(client, cfg)
 				txt, err := gemini.GetContent(ctx, m, rQ.RawQuestion)
 				if err != nil {
@@ -71,13 +76,28 @@ func main() {
 					return
 				}
 
+				// log.Printf("id %v & title %v --> \n%v", rQ.ID, rQ.Title, string(txt))
 				var temp db.ProcessedQuestion
+				temp.Title = rQ.Title
+
 				err = json.Unmarshal([]byte(txt), &temp)
 				if err != nil {
 					log.Panic(err)
 				}
-				log.Printf("Successfully Unmarshal for raw question id = %v", temp.ID)
-				log.Printf("%+v", temp)
+				log.Printf("Successfully Unmarshal for raw question id = %v", rQ.ID)
+
+				id, err := queries.InsertProcessedQuestion(ctx, db.InsertProcessedQuestionParams{
+					Title: temp.Title,
+					Question: temp.Question,
+					MultipleChoices: temp.MultipleChoices,
+					CorrectAnswer: temp.CorrectAnswer,
+					Explanation: temp.Explanation,
+					Keywords: temp.Keywords,
+				})
+				if err != nil {
+					log.Panic(err)
+				}
+				log.Printf("Inserted data into processed table id %v", id)
 				wg.Done()
 				return
 			}(rQ)
