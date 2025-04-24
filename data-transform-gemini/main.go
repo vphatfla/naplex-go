@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/vphatfla/naplex-go/data-transform-gemini/config"
@@ -45,17 +46,18 @@ func main() {
 		log.Fatal(err)
 	}
 	total := int(t)
-	total = 10
+	// total = 10
 
 	var wg sync.WaitGroup
 
-	for start  := 1; start <= total; start += 10{
+	for start  := 21; start <= total; start += 10{
 		end := min(start + 9, total)
+		log.Printf("Retrieving raw data from %v to %v", start, end)
 		rawQuestions, err := queries.GetRawQuestionWithRange(ctx,
-			db.GetRawQuestionWithRangeParams{
-				ID: int32(start),
-				ID_2: int32(end),
-			})
+		db.GetRawQuestionWithRangeParams{
+			ID: int32(start),
+			ID_2: int32(end),
+		})
 		if err != nil {
 			log.Printf("Error getting raw questions from %v to %v -->  %v", start, end, err)
 			continue
@@ -82,6 +84,7 @@ func main() {
 
 				err = json.Unmarshal([]byte(txt), &temp)
 				if err != nil {
+					log.Printf("raw id = %v -->  txt = %v ", rQ.ID,txt)
 					log.Panic(err)
 				}
 				log.Printf("Successfully Unmarshal for raw question id = %v", rQ.ID)
@@ -101,7 +104,12 @@ func main() {
 				wg.Done()
 				return
 			}(rQ)
+
 		}
+		// sleep one minute since it's the free version threshold!
+		log.Println("Sleeping ...")
+		time.Sleep(1*time.Minute)
+
 	}
 
 	wg.Wait()
