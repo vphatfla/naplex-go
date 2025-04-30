@@ -23,7 +23,7 @@ func (q *Queries) CountRawQuestion(ctx context.Context) (int64, error) {
 }
 
 const getProcessedQuestionByID = `-- name: GetProcessedQuestionByID :one
-SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords FROM processed_questions WHERE id = $1
+SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords, link FROM processed_questions WHERE id = $1
 `
 
 func (q *Queries) GetProcessedQuestionByID(ctx context.Context, id int32) (ProcessedQuestion, error) {
@@ -37,6 +37,7 @@ func (q *Queries) GetProcessedQuestionByID(ctx context.Context, id int32) (Proce
 		&i.CorrectAnswer,
 		&i.Explanation,
 		&i.Keywords,
+		&i.Link,
 	)
 	return i, err
 }
@@ -94,8 +95,8 @@ func (q *Queries) GetRawQuestionWithRange(ctx context.Context, arg GetRawQuestio
 }
 
 const insertProcessedQuestion = `-- name: InsertProcessedQuestion :one
-INSERT INTO processed_questions (title, question, multiple_choices, correct_answer, explanation, keywords)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO processed_questions (title, question, multiple_choices, correct_answer, explanation, keywords, link)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id
 `
 
@@ -106,6 +107,7 @@ type InsertProcessedQuestionParams struct {
 	CorrectAnswer   string
 	Explanation     pgtype.Text
 	Keywords        pgtype.Text
+	Link            pgtype.Text
 }
 
 func (q *Queries) InsertProcessedQuestion(ctx context.Context, arg InsertProcessedQuestionParams) (int32, error) {
@@ -116,6 +118,7 @@ func (q *Queries) InsertProcessedQuestion(ctx context.Context, arg InsertProcess
 		arg.CorrectAnswer,
 		arg.Explanation,
 		arg.Keywords,
+		arg.Link,
 	)
 	var id int32
 	err := row.Scan(&id)
@@ -143,8 +146,8 @@ func (q *Queries) InsertRawQuestion(ctx context.Context, arg InsertRawQuestionPa
 
 const updateProcessedQuestion = `-- name: UpdateProcessedQuestion :one
 UPDATE processed_questions
-SET title = $1, question = $2, multiple_choices = $3, correct_answer = $4, explanation = $5, keywords = $6
-WHERE id = $7
+SET title = $1, question = $2, multiple_choices = $3, correct_answer = $4, explanation = $5, keywords = $6, link = $7
+WHERE id = $8
 RETURNING id
 `
 
@@ -155,6 +158,7 @@ type UpdateProcessedQuestionParams struct {
 	CorrectAnswer   string
 	Explanation     pgtype.Text
 	Keywords        pgtype.Text
+	Link            pgtype.Text
 	ID              int32
 }
 
@@ -166,6 +170,7 @@ func (q *Queries) UpdateProcessedQuestion(ctx context.Context, arg UpdateProcess
 		arg.CorrectAnswer,
 		arg.Explanation,
 		arg.Keywords,
+		arg.Link,
 		arg.ID,
 	)
 	var id int32

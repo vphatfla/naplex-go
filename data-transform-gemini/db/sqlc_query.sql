@@ -20,8 +20,8 @@ WHERE id = $4
 RETURNING id;
 
 -- name: InsertProcessedQuestion :one
-INSERT INTO processed_questions (title, question, multiple_choices, correct_answer, explanation, keywords)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO processed_questions (title, question, multiple_choices, correct_answer, explanation, keywords, link)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id;
 
 -- name: GetProcessedQuestionByID :one
@@ -29,8 +29,8 @@ SELECT * FROM processed_questions WHERE id = $1;
 
 -- name: UpdateProcessedQuestion :one
 UPDATE processed_questions
-SET title = $1, question = $2, multiple_choices = $3, correct_answer = $4, explanation = $5, keywords = $6
-WHERE id = $7
+SET title = $1, question = $2, multiple_choices = $3, correct_answer = $4, explanation = $5, keywords = $6, link = $7
+WHERE id = $8
 RETURNING id;
 
 

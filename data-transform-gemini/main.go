@@ -46,11 +46,10 @@ func main() {
 		log.Fatal(err)
 	}
 	total := int(t)
-	// total = 10
 
 	var wg sync.WaitGroup
 
-	for start  := 21; start <= total; start += 10{
+	for start  := 1; start <= total; start += 10{
 		end := min(start + 9, total)
 		log.Printf("Retrieving raw data from %v to %v", start, end)
 		rawQuestions, err := queries.GetRawQuestionWithRange(ctx,
@@ -96,6 +95,7 @@ func main() {
 					CorrectAnswer: temp.CorrectAnswer,
 					Explanation: temp.Explanation,
 					Keywords: temp.Keywords,
+					Link: rQ.Link,
 				})
 				if err != nil {
 					log.Panic(err)
