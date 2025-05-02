@@ -1,0 +1,38 @@
+List of API enpoint
+
+    user:
+        
+        /users/login:
+            POST
+            json payload {
+                email: ...,
+                password: ...,
+            }
+            Return code:
+                200 -> success
+                    payload: json {
+                        jwtToken: ...
+                    }
+                400 -> bad requests:
+                    invalid end points or invalid payload fields
+                    empty payload
+                401 -> unauthorized
+                    empty payload
+
+        /users/signup
+            POST
+            json payload {
+                email: ...,
+                password: ...,
+                name: ...,
+            }
+
+            Return code:
+                200 -> success
+                    payload json {
+                        jwtToken: ...
+                    }
+                400 -> bad requests
+                    invalid endpoint or invalid payload
+                    empty payload
+                
