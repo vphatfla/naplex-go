@@ -5,7 +5,7 @@ Database schema:
         email - string - unique
         password - []byte
         name - string
-
+        create_at - timestamp
     raw_questions:
         ...
 

@@ -5,8 +5,53 @@
 package db
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type QuestionStatus string
+
+const (
+	QuestionStatusFAILED QuestionStatus = "FAILED"
+	QuestionStatusPASSED QuestionStatus = "PASSED"
+)
+
+func (e *QuestionStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = QuestionStatus(s)
+	case string:
+		*e = QuestionStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for QuestionStatus: %T", src)
+	}
+	return nil
+}
+
+type NullQuestionStatus struct {
+	QuestionStatus QuestionStatus
+	Valid          bool // Valid is true if QuestionStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullQuestionStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.QuestionStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.QuestionStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullQuestionStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.QuestionStatus), nil
+}
 
 type ProcessedQuestion struct {
 	ID              int32
@@ -24,4 +69,23 @@ type RawQuestion struct {
 	Title       string
 	RawQuestion string
 	Link        pgtype.Text
+}
+
+type User struct {
+	ID        int32
+	Email     string
+	Password  []byte
+	Name      string
+	CreatedAt pgtype.Timestamptz
+}
+
+type UsersQuestion struct {
+	Uid       int32
+	Qid       int32
+	Status    NullQuestionStatus
+	Attempts  pgtype.Int4
+	Saved     pgtype.Bool
+	Hidden    pgtype.Bool
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
