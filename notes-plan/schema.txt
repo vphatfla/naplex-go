@@ -1,0 +1,34 @@
+Database schema:
+
+    users:
+        id - auto increment - PK
+        email - string - unique
+        password - []byte
+        name - string
+
+    raw_questions:
+        ...
+
+    process_questions:
+        id - auto increment - PK
+        title
+        question
+        multiple_choices
+        correct_answer
+        explanation
+        keywords
+        link
+
+    junction tables:
+
+        users_questions:
+            uid - id - user id FK
+            qid - id - question id FK
+            (uid + qid) -> composite PK
+
+            status: (FAILED, PASSED)
+            attempts - int - how many times user have tried
+            saved - bool - is this question saved by user
+            hidden - bool - is this question marked hidden by user (must not show the next time)
+
+
