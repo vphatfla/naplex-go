@@ -1,0 +1,6 @@
+Auth API: use oauth2
+
+Use google authorization server to let customer sign-up/login
+After sucessfully sign up, use access token to request name and photo
+
+After that, go back and handle cookie token session to handle access individually.
