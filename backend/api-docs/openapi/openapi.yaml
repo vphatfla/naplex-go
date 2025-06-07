@@ -1,0 +1,186 @@
+openapi: 3.1.0
+info:
+  title: backend-apis
+  version: 0.0.0
+server:
+  - url: localhost:8000
+    description: Local Development Server
+schemas:
+  User:
+    type: Object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: UID
+        readOnly: true
+      google_id:
+        type: string
+        description: The user's Google ID.
+        readOnly: true
+      email:
+        type: string
+        format: email
+        description: The user's email address.
+      name:
+        type: string
+        description: The user's full name.
+      first_name:
+        type: string
+        description: The user's first name.
+      last_name:
+        type: string
+        description: The user's last name.
+      picture:
+        type: string
+        format: uri
+        description: URL to the user's profile picture.
+      created_at:
+        type: string
+        format: date-time
+        description: The timestamp when the user was created.
+        readOnly: true
+      updated_at:
+        type: string
+        format: date-time
+        description: The timestamp when the user was last updated.
+        readOnly: true
+      last_login_at:
+        type: string
+        format: date-time
+        description: The timestamp of the user's last login.
+        readOnly: true
+  Question:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The unique identifier for the question.
+          readOnly: true
+        title:
+          type: string
+          description: The title of the question.
+        question:
+          type: string
+          description: The full text of the question.
+        multiple_choices:
+          type: string
+          description: A JSON string or delimited string of multiple choice answers.
+        correct_answer:
+          type: string
+          description: The correct answer to the question.
+        explanation:
+          type: string
+          description: An explanation for the correct answer.
+        keywords:
+          type: string
+          description: Keywords associated with the question.
+        link:
+          type: string
+          format: uri
+          description: A link to a resource for more information.
+    UserQuestion:
+      type: object
+      properties:
+        uid:
+          type: integer
+          description: The ID of the user.
+        qid:
+          type: integer
+          description: The ID of the question.
+        status:
+          type: string
+          enum: [answered, unanswered, marked_for_review]
+          description: The user's status for this question.
+        attempts:
+          type: integer
+          description: The number of attempts the user has made on this question.
+        saved:
+          type: boolean
+          description: Whether the user has saved this question.
+        hidden:
+          type: boolean
+          description: Whether the user has hidden this question.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+paths:
+  /auth/google/callback:
+    get:
+      summary: Google Auth Callback
+      description: Endpoint that Google redirects to after successfully authenticate
+      operationId: handleGoogleCallbackForSession
+      tags:
+        - Authentication
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: Auth code returned by Google.
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false # Recommended for security (CSRF protection)
+          description: An opaque value used to maintain state between the request and callback.
+          schema:
+            type: string
+      response:
+        '200':
+          description: Auth successfully. User's session is established. Header contains sessionID.
+           headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: session_id=abc123xyz; Path=/; HttpOnly; Secure; SameSite=Lax
+              description: |
+                Sets the session cookie on the user's browser.
+                - `HttpOnly`: Prevents access from client-side JavaScript.
+                - `Secure`: Ensures the cookie is only sent over HTTPS.
+                - `SameSite=Lax` or `Strict`: Provides CSRF protection.
+        '400':
+          description: Bad Request. The 'code' is missing, invalid, or has expired.
+        '500':
+          description: Internal Server Error. Failed to exchange code with Google or a database error occurred.
+  /auth/session:
+    get:
+      summary: Get Current Session User
+      description: |
+        Retrieves the profile of the currently authenticated user based on their session cookie.
+        Check if user's session is valid.
+      operationId: getCurrentSession
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: An active session was found.
+        '401':
+          description: Unauthorized. The user is not logged in or the session is invalid/expired.
+  /auth/logout:
+    post:
+      summary: Logout User
+      description: |
+        Delete the current user session on the server/database and instructs the browser to clear the session cookie.
+      operationId: logoutUser
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: |
+            Logout successful. The server has cleared the session.
+            The response includes a `Set-Cookie` header that expires the cookie on the browser.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+              description: Instructs the browser to delete the session cookie.
+        '401':
+          description: Unauthorized. No active session to log out from.
+
