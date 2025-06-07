@@ -1,6 +1,3 @@
--- Set the search path
-SET search_path TO naplex_data;
-
 -- Create enum type for the status
 CREATE TYPE question_status AS ENUM ('FAILED', 'PASSED');
 

@@ -53,7 +53,7 @@ func (ns NullQuestionStatus) Value() (driver.Value, error) {
 	return string(ns.QuestionStatus), nil
 }
 
-type ProcessedQuestion struct {
+type Question struct {
 	ID              int32
 	Title           string
 	Question        string
@@ -62,13 +62,6 @@ type ProcessedQuestion struct {
 	Explanation     pgtype.Text
 	Keywords        pgtype.Text
 	Link            pgtype.Text
-}
-
-type RawQuestion struct {
-	ID          int32
-	Title       string
-	RawQuestion string
-	Link        pgtype.Text
 }
 
 type User struct {

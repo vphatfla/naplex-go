@@ -41,17 +41,6 @@ func (q *Queries) CheckUserExistsByGoogleID(ctx context.Context, googleID string
 	return exists, err
 }
 
-const countRawQuestion = `-- name: CountRawQuestion :one
-SELECT COUNT(id) FROM raw_questions
-`
-
-func (q *Queries) CountRawQuestion(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countRawQuestion)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users
 `
@@ -175,13 +164,13 @@ func (q *Queries) GetDailyNewUsers(ctx context.Context, createdAt pgtype.Timesta
 	return items, nil
 }
 
-const getProcessedQuestionByID = `-- name: GetProcessedQuestionByID :one
-SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords, link FROM processed_questions WHERE id = $1
+const getQuestionByID = `-- name: GetQuestionByID :one
+SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords, link FROM questions WHERE id = $1
 `
 
-func (q *Queries) GetProcessedQuestionByID(ctx context.Context, id int32) (ProcessedQuestion, error) {
-	row := q.db.QueryRow(ctx, getProcessedQuestionByID, id)
-	var i ProcessedQuestion
+func (q *Queries) GetQuestionByID(ctx context.Context, id int32) (Question, error) {
+	row := q.db.QueryRow(ctx, getQuestionByID, id)
+	var i Question
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
@@ -193,58 +182,6 @@ func (q *Queries) GetProcessedQuestionByID(ctx context.Context, id int32) (Proce
 		&i.Link,
 	)
 	return i, err
-}
-
-const getRawQuestionByID = `-- name: GetRawQuestionByID :one
-SELECT id, title, raw_question, link FROM raw_questions
-WHERE id=$1 LIMIT 1
-`
-
-func (q *Queries) GetRawQuestionByID(ctx context.Context, id int32) (RawQuestion, error) {
-	row := q.db.QueryRow(ctx, getRawQuestionByID, id)
-	var i RawQuestion
-	err := row.Scan(
-		&i.ID,
-		&i.Title,
-		&i.RawQuestion,
-		&i.Link,
-	)
-	return i, err
-}
-
-const getRawQuestionWithRange = `-- name: GetRawQuestionWithRange :many
-SELECT id, title, raw_question, link FROM raw_questions
-WHERE id >= $1 AND id <= $2
-`
-
-type GetRawQuestionWithRangeParams struct {
-	ID   int32
-	ID_2 int32
-}
-
-func (q *Queries) GetRawQuestionWithRange(ctx context.Context, arg GetRawQuestionWithRangeParams) ([]RawQuestion, error) {
-	rows, err := q.db.Query(ctx, getRawQuestionWithRange, arg.ID, arg.ID_2)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []RawQuestion
-	for rows.Next() {
-		var i RawQuestion
-		if err := rows.Scan(
-			&i.ID,
-			&i.Title,
-			&i.RawQuestion,
-			&i.Link,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -357,13 +294,13 @@ func (q *Queries) GetUsersByIDs(ctx context.Context, dollar_1 []int32) ([]User, 
 	return items, nil
 }
 
-const insertProcessedQuestion = `-- name: InsertProcessedQuestion :one
-INSERT INTO processed_questions (title, question, multiple_choices, correct_answer, explanation, keywords, link)
+const insertQuestion = `-- name: InsertQuestion :one
+INSERT INTO questions (title, question, multiple_choices, correct_answer, explanation, keywords, link)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id
 `
 
-type InsertProcessedQuestionParams struct {
+type InsertQuestionParams struct {
 	Title           string
 	Question        string
 	MultipleChoices string
@@ -373,8 +310,8 @@ type InsertProcessedQuestionParams struct {
 	Link            pgtype.Text
 }
 
-func (q *Queries) InsertProcessedQuestion(ctx context.Context, arg InsertProcessedQuestionParams) (int32, error) {
-	row := q.db.QueryRow(ctx, insertProcessedQuestion,
+func (q *Queries) InsertQuestion(ctx context.Context, arg InsertQuestionParams) (int32, error) {
+	row := q.db.QueryRow(ctx, insertQuestion,
 		arg.Title,
 		arg.Question,
 		arg.MultipleChoices,
@@ -383,25 +320,6 @@ func (q *Queries) InsertProcessedQuestion(ctx context.Context, arg InsertProcess
 		arg.Keywords,
 		arg.Link,
 	)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
-}
-
-const insertRawQuestion = `-- name: InsertRawQuestion :one
-INSERT INTO raw_questions (title, raw_question, link)
-VALUES ($1, $2, $3)
-RETURNING id
-`
-
-type InsertRawQuestionParams struct {
-	Title       string
-	RawQuestion string
-	Link        pgtype.Text
-}
-
-func (q *Queries) InsertRawQuestion(ctx context.Context, arg InsertRawQuestionParams) (int32, error) {
-	row := q.db.QueryRow(ctx, insertRawQuestion, arg.Title, arg.RawQuestion, arg.Link)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
@@ -582,14 +500,14 @@ func (q *Queries) SearchUsersByName(ctx context.Context, arg SearchUsersByNamePa
 	return items, nil
 }
 
-const updateProcessedQuestion = `-- name: UpdateProcessedQuestion :one
-UPDATE processed_questions
+const updateQuestion = `-- name: UpdateQuestion :one
+UPDATE questions
 SET title = $1, question = $2, multiple_choices = $3, correct_answer = $4, explanation = $5, keywords = $6, link = $7
 WHERE id = $8
 RETURNING id
 `
 
-type UpdateProcessedQuestionParams struct {
+type UpdateQuestionParams struct {
 	Title           string
 	Question        string
 	MultipleChoices string
@@ -600,40 +518,14 @@ type UpdateProcessedQuestionParams struct {
 	ID              int32
 }
 
-func (q *Queries) UpdateProcessedQuestion(ctx context.Context, arg UpdateProcessedQuestionParams) (int32, error) {
-	row := q.db.QueryRow(ctx, updateProcessedQuestion,
+func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (int32, error) {
+	row := q.db.QueryRow(ctx, updateQuestion,
 		arg.Title,
 		arg.Question,
 		arg.MultipleChoices,
 		arg.CorrectAnswer,
 		arg.Explanation,
 		arg.Keywords,
-		arg.Link,
-		arg.ID,
-	)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
-}
-
-const updateRawQuestion = `-- name: UpdateRawQuestion :one
-UPDATE raw_questions
-SET title = $1, raw_question = $2, link = $3
-WHERE id = $4
-RETURNING id
-`
-
-type UpdateRawQuestionParams struct {
-	Title       string
-	RawQuestion string
-	Link        pgtype.Text
-	ID          int32
-}
-
-func (q *Queries) UpdateRawQuestion(ctx context.Context, arg UpdateRawQuestionParams) (int32, error) {
-	row := q.db.QueryRow(ctx, updateRawQuestion,
-		arg.Title,
-		arg.RawQuestion,
 		arg.Link,
 		arg.ID,
 	)
