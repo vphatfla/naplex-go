@@ -52,6 +52,64 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const createOrUpsertUser = `-- name: CreateOrUpsertUser :one
+INSERT INTO users (
+    google_id,
+    email,
+    name,
+    first_name,
+    last_name,
+    picture,
+    last_login_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, NOW()
+)
+ON CONFLICT (google_id)
+DO UPDATE SET
+    email = EXCLUDED.email,
+    name = EXCLUDED.name,
+    first_name = EXCLUDED.first_name,
+    last_name = EXCLUDED.last_name,
+    picture = EXCLUDED.picture,
+    last_login_at = NOW()
+RETURNING id, google_id, email, name, first_name, last_name, picture, created_at, updated_at, last_login_at
+`
+
+type CreateOrUpsertUserParams struct {
+	GoogleID  string
+	Email     string
+	Name      string
+	FirstName pgtype.Text
+	LastName  pgtype.Text
+	Picture   pgtype.Text
+}
+
+// Used for Google OAuth login - creates user if not exists, updates if exists
+func (q *Queries) CreateOrUpsertUser(ctx context.Context, arg CreateOrUpsertUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createOrUpsertUser,
+		arg.GoogleID,
+		arg.Email,
+		arg.Name,
+		arg.FirstName,
+		arg.LastName,
+		arg.Picture,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.GoogleID,
+		&i.Email,
+		&i.Name,
+		&i.FirstName,
+		&i.LastName,
+		&i.Picture,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastLoginAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 
 INSERT INTO users (
@@ -631,64 +689,6 @@ type UpdateUserProfileParams struct {
 func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) (User, error) {
 	row := q.db.QueryRow(ctx, updateUserProfile,
 		arg.ID,
-		arg.Name,
-		arg.FirstName,
-		arg.LastName,
-		arg.Picture,
-	)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.GoogleID,
-		&i.Email,
-		&i.Name,
-		&i.FirstName,
-		&i.LastName,
-		&i.Picture,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.LastLoginAt,
-	)
-	return i, err
-}
-
-const upsertUser = `-- name: UpsertUser :one
-INSERT INTO users (
-    google_id,
-    email,
-    name,
-    first_name,
-    last_name,
-    picture,
-    last_login_at
-) VALUES (
-    $1, $2, $3, $4, $5, $6, NOW()
-)
-ON CONFLICT (google_id)
-DO UPDATE SET
-    email = EXCLUDED.email,
-    name = EXCLUDED.name,
-    first_name = EXCLUDED.first_name,
-    last_name = EXCLUDED.last_name,
-    picture = EXCLUDED.picture,
-    last_login_at = NOW()
-RETURNING id, google_id, email, name, first_name, last_name, picture, created_at, updated_at, last_login_at
-`
-
-type UpsertUserParams struct {
-	GoogleID  string
-	Email     string
-	Name      string
-	FirstName pgtype.Text
-	LastName  pgtype.Text
-	Picture   pgtype.Text
-}
-
-// Used for Google OAuth login - creates user if not exists, updates if exists
-func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, upsertUser,
-		arg.GoogleID,
-		arg.Email,
 		arg.Name,
 		arg.FirstName,
 		arg.LastName,

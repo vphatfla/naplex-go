@@ -11,14 +11,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
 // Data encrypted and stored in the cookie
 type Session struct {
-	UserID string `json:"user_id"`
-	Email string `json:"user_id"`
-	Name string `json:"user_id"`
+	UserID int `json:"user_id"`
+	Email string `json:"email"`
+	Name string `json:"name"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
@@ -60,6 +61,39 @@ func (cm *CookieManager) CreateCookie(name string, data interface{}, maxAge int)
     }, nil
 }
 
+// Validate cookie
+func (cm *CookieManager) ValidateCookie(cookie *http.Cookie, dest interface{}) error {
+	parts := strings.Split(cookie.Value, ".")
+	if len(parts) != 2 {
+		return fmt.Errorf("Invalid cookie length")
+	}
+
+	// decode
+	eData, err := base64.URLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return fmt.Errorf("ValidateCookie: error decoding session data -> %v", err)
+	}
+
+	signature, err := base64.URLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return fmt.Errorf("ValidateCookie: error decoding signature -> %v", err)
+	}
+	expectedSignature := cm.sign(eData)
+	if !hmac.Equal(signature, expectedSignature) {
+		return fmt.Errorf("ValidateCookie: Invalid cookie, not equal")
+	}
+
+	decryptData, err := cm.decrypt(eData)
+	if err != nil {
+		return fmt.Errorf("ValidateCookie: error decrypting session -> %v", err)
+	}
+
+	if err := json.Unmarshal(decryptData, dest); err != nil {
+		return fmt.Errorf("ValidateCookie: error unmarshaling data -> %v", err)
+	}
+
+	return nil
+}
 func (cm *CookieManager) encrypt(data []byte) ([]byte, error) {
     block, err := aes.NewCipher(cm.cookieSecret)
     if err != nil {
@@ -83,4 +117,22 @@ func (cm *CookieManager) sign(data []byte) []byte {
 	h := hmac.New(sha256.New, cm.cookieSecret)
 	h.Write(data)
 	return h.Sum(nil)
+}
+func (cm *CookieManager) decrypt(data []byte) ([]byte, error) {
+    block, err := aes.NewCipher(cm.cookieSecret)
+    if err != nil {
+        return nil, err
+    }
+
+    gcm, err := cipher.NewGCM(block)
+    if err != nil {
+        return nil, err
+    }
+
+    if len(data) < gcm.NonceSize() {
+        return nil, fmt.Errorf("ciphertext too short")
+    }
+
+    nonce, ciphertext := data[:gcm.NonceSize()], data[gcm.NonceSize():]
+    return gcm.Open(nil, nonce, ciphertext, nil)
 }

@@ -16,7 +16,7 @@ INSERT INTO users (
 )
 RETURNING *;
 
--- name: UpsertUser :one
+-- name: CreateOrUpsertUser :one
 -- Used for Google OAuth login - creates user if not exists, updates if exists
 INSERT INTO users (
     google_id,
