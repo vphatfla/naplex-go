@@ -15,5 +15,6 @@ func main() {
 	}
 
 	config := config.LoadConfig()
-	log.Printf("Client id %s", config.Auth.GoogleClientID)
+	log.Printf("Client id %s", config.OAuth2Config.ClientID)
+	log.Printf("Cookie = %s", config.CookieSecret)
 }
