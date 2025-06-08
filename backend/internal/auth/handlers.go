@@ -27,7 +27,7 @@ func NewAuthManager(config *config.Config, db *database.Queries) *AuthHandler {
 	}
 }
 
-func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r http.Request) {
+func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := GenerateStateToken()
 	if err != nil {
 		utils.HTTPJsonError(w, "Failed to generate state for session", http.StatusInternalServerError)
@@ -52,7 +52,7 @@ func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r http.Request) {
 	})
 }
 
-func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r http.Request) {
+func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("oauth_state")
 	if err != nil {
 		utils.HTTPJsonError(w, "missing cookie", http.StatusBadRequest)
@@ -143,5 +143,18 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r http.Request
 			"name": u.Name,
 			"picture": u.Picture.String,
 		},
+	})
+}
+
+func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+        Name:     "session",
+        Value:    "",
+        Path:     "/",
+        MaxAge:   -1,
+        HttpOnly: true,
+    })
+	utils.HTTPJsonResponse(w, map[string]bool{
+		"success": true,
 	})
 }
