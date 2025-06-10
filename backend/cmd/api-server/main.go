@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/joho/godotenv"
 	"github.com/vphatfla/naplex-go/backend/internal/config"
+	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
 )
 
 func main() {
@@ -14,7 +16,16 @@ func main() {
 		log.Fatalf("Failed loading env %v", err);
 	}
 
+	ctx := context.Background()
 	config := config.LoadConfig()
-	log.Printf("Client id %s", config.OAuth2Config.ClientID)
-	log.Printf("Cookie = %s", config.CookieSecret)
+
+	pool, err := database.NewPool(ctx, config)
+	if err != nil {
+		log.Fatalf("Failed to create database pool -> %v", err)
+	}
+	defer pool.Close()
+
+	querier := database.New(pool)
+
+	querier.CheckUserExistsByEmail(ctx, "abc")
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"golang.org/x/oauth2"
@@ -10,6 +11,19 @@ import (
 type Config struct {
 	OAuth2Config *oauth2.Config
 	CookieSecret []byte
+	DBConfig *DBConfig
+}
+
+type DBConfig struct {
+	Username string
+	Password string
+	DBName string
+	Host string
+	Port string
+}
+
+func (c *DBConfig) ToURLString() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.Username, c.Password, c.Host, c.Port, c.DBName)
 }
 
 func LoadConfig() *Config {
@@ -26,5 +40,12 @@ func LoadConfig() *Config {
 			RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
 		},
 		CookieSecret: []byte(os.Getenv("COOKIE_SECRET")),
+		DBConfig: &DBConfig{
+			Username: os.Getenv("POSTGRES_USER"),
+			Password: os.Getenv("POSTGRES_PASSWORD"),
+			DBName: os.Getenv("POSTGRES_DB"),
+			Host: os.Getenv("POSTGRES_HOST"),
+			Port: os.Getenv("POSTGRES_PORT"),
+		},
 	}
 }
