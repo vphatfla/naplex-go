@@ -37,7 +37,7 @@ func LoadConfig() *Config {
                 "email",
                 "profile",
             },
-			RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
+			RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URI"),
 		},
 		CookieSecret: []byte(os.Getenv("COOKIE_SECRET")),
 		DBConfig: &DBConfig{

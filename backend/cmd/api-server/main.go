@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 
 	"github.com/joho/godotenv"
+	"github.com/vphatfla/naplex-go/backend/internal/auth"
 	"github.com/vphatfla/naplex-go/backend/internal/config"
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
 )
@@ -25,7 +27,16 @@ func main() {
 	}
 	defer pool.Close()
 
+	queries := database.New(pool)
+	authHandler := auth.NewAuthHandler(config, queries)
+	authRouter := authHandler.RegisterRouter()
+
+	http.Handle("/auth/", http.StripPrefix("/auth", authRouter))
+
+	log.Fatal(http.ListenAndServe(":8080", nil))
+	/*
 	querier := database.New(pool)
 
 	querier.CheckUserExistsByEmail(ctx, "abc")
+	*/
 }

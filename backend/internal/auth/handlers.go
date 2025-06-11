@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -19,7 +20,7 @@ type AuthHandler struct {
 	db *database.Queries
 }
 
-func NewAuthManager(config *config.Config, db *database.Queries) *AuthHandler {
+func NewAuthHandler(config *config.Config, db *database.Queries) *AuthHandler {
 	return &AuthHandler{
 		config: config,
 		cookieManager: NewCookieManager(config.CookieSecret),
@@ -27,6 +28,14 @@ func NewAuthManager(config *config.Config, db *database.Queries) *AuthHandler {
 	}
 }
 
+func (h *AuthHandler) RegisterRouter() *http.ServeMux {
+	m := http.NewServeMux()
+
+	m.Handle("GET /google/login", http.HandlerFunc(h.HandleGoogleLogin))
+	m.Handle("GET /google/callback", http.HandlerFunc(h.HandleGoogleCallback))
+
+	return m
+}
 func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := GenerateStateToken()
 	if err != nil {
@@ -39,7 +48,7 @@ func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) 
     }, 600) // 10 minutes)
 
 	if err != nil {
-		utils.HTTPJsonError(w, "Failed to generate cookie for session", http.StatusInternalServerError)
+		utils.HTTPJsonError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -47,9 +56,14 @@ func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) 
 
 	url := h.config.OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
-	utils.HTTPJsonResponse(w, map[string]string{
+	log.Printf("Redirect uri -> %s", h.config.OAuth2Config.RedirectURL)
+	log.Printf("URL -> %s", url)
+
+	/*utils.HTTPJsonResponse(w, map[string]string{
 		"url": url,
-	})
+	}) */
+
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
 func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
