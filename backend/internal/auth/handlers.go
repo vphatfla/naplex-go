@@ -73,9 +73,9 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var stateData map[string]string
-	if err := h.cookieManager.ValidateCookie(cookie, stateData); err != nil {
-		utils.HTTPJsonError(w, "invalid state cookie", http.StatusBadRequest)
+	var stateData map[string]interface{}
+	if err := h.cookieManager.ValidateCookie(cookie, &stateData); err != nil {
+		utils.HTTPJsonError(w, fmt.Errorf("invalid state cookie -> %v").Error(), http.StatusBadRequest)
 		return
 	}
 

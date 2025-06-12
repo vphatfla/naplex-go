@@ -62,6 +62,7 @@ func (cm *CookieManager) CreateCookie(name string, data interface{}, maxAge int)
 }
 
 // Validate cookie
+// dest is a flexible data type that can hold pointer as value
 func (cm *CookieManager) ValidateCookie(cookie *http.Cookie, dest interface{}) error {
 	parts := strings.Split(cookie.Value, ".")
 	if len(parts) != 2 {
@@ -88,7 +89,7 @@ func (cm *CookieManager) ValidateCookie(cookie *http.Cookie, dest interface{}) e
 		return fmt.Errorf("ValidateCookie: error decrypting session -> %v", err)
 	}
 
-	if err := json.Unmarshal(decryptData, dest); err != nil {
+	if err := json.Unmarshal(decryptData, &dest); err != nil {
 		return fmt.Errorf("ValidateCookie: error unmarshaling data -> %v", err)
 	}
 

@@ -33,7 +33,7 @@ func (m *Middleware) RequireAuth(next http.Handler) http.Handler {
 		}
 
 		var sData Session
-		if err := m.cookieManager.ValidateCookie(sessionCookie, sData); err != nil {
+		if err := m.cookieManager.ValidateCookie(sessionCookie, &sData); err != nil {
 			utils.HTTPJsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
