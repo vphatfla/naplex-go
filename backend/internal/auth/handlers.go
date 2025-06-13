@@ -149,15 +149,15 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	http.SetCookie(w, cookie)
-
-	utils.HTTPJsonResponse(w, map[string]interface{} {
+	http.Redirect(w, r, "/users/info", http.StatusPermanentRedirect)
+/*	utils.HTTPJsonResponse(w, map[string]interface{} {
 		"user": map[string]string{
 			"user_id": string(u.ID),
 			"email": u.Email,
 			"name": u.Name,
 			"picture": u.Picture.String,
 		},
-	})
+	})*/
 }
 
 func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {

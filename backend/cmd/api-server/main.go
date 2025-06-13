@@ -8,7 +8,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/vphatfla/naplex-go/backend/internal/auth"
 	"github.com/vphatfla/naplex-go/backend/internal/config"
+	"github.com/vphatfla/naplex-go/backend/internal/logging"
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
+	"github.com/vphatfla/naplex-go/backend/internal/users"
 )
 
 func main() {
@@ -31,8 +33,10 @@ func main() {
 	authHandler := auth.NewAuthHandler(config, queries)
 	authRouter := authHandler.RegisterRouter()
 
-	http.Handle("/auth/", http.StripPrefix("/auth", authRouter))
-
+	http.Handle("/auth/", logging.LogMiddleware(http.StripPrefix("/auth", authRouter)))
+	
+	var userHandler users.UserHandler
+	http.Handle("/users/", logging.LogMiddleware(http.StripPrefix("/users", userHandler.RegisterRoutes())))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 	/*
 	querier := database.New(pool)
