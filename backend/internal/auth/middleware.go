@@ -18,7 +18,7 @@ type Middleware struct {
 	cookieManager *CookieManager
 }
 
-func NewMiddleware(config config.Config) *Middleware{
+func NewMiddleware(config *config.Config) *Middleware{
 	return &Middleware{
 		cookieManager: NewCookieManager(config.CookieSecret),
 	}
@@ -43,7 +43,8 @@ func (m *Middleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), SESSION_CONTEXT_KEY, sData)
+		// ctx := context.WithValue(r.Context(), SESSION_CONTEXT_KEY, sData)
+		ctx := context.WithValue(r.Context(), "user_id", sData.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

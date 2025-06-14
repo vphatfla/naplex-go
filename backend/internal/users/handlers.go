@@ -19,6 +19,7 @@ func (h *UserHandler) RegisterRoutes() *http.ServeMux {
 }
 func (h *UserHandler) HandleGetUserInfo(w http.ResponseWriter, r *http.Request) {
 	log.Printf("user id = %v", r.Context().Value("user_id"))
-
+	log.Printf("user session = %v", r.Cookies())
+	log.Printf("r context = %v", r.Context())
 	utils.HTTPJsonResponse(w, nil)
 }

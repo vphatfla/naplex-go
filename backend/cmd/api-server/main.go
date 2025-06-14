@@ -32,11 +32,12 @@ func main() {
 	queries := database.New(pool)
 	authHandler := auth.NewAuthHandler(config, queries)
 	authRouter := authHandler.RegisterRouter()
+	m := auth.NewMiddleware(config)
 
 	http.Handle("/auth/", logging.LogMiddleware(http.StripPrefix("/auth", authRouter)))
 	
 	var userHandler users.UserHandler
-	http.Handle("/users/", logging.LogMiddleware(http.StripPrefix("/users", userHandler.RegisterRoutes())))
+	http.Handle("/users/", logging.LogMiddleware(m.RequireAuth(http.StripPrefix("/users", userHandler.RegisterRoutes()))))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 	/*
 	querier := database.New(pool)
