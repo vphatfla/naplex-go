@@ -1,4 +1,4 @@
-package logging
+package middleware
 
 import (
 	"log"
@@ -17,7 +17,7 @@ func (w *responseWriter) WriteHeader(statusCode int) {
 	w.ResponseWriter.WriteHeader(statusCode)
 }
 
-func LogMiddleware(next http.Handler) http.Handler {
+func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wrapped := &responseWriter {
 			ResponseWriter: w,

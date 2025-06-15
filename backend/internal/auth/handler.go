@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/vphatfla/naplex-go/backend/internal/config"
-	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
 	"github.com/vphatfla/naplex-go/backend/internal/utils"
 	"golang.org/x/oauth2"
 )
@@ -17,14 +15,14 @@ import (
 type AuthHandler struct {
 	config *config.Config
 	cookieManager *CookieManager
-	db *database.Queries
+	s *Service
 }
 
-func NewAuthHandler(config *config.Config, db *database.Queries) *AuthHandler {
+func NewAuthHandler(config *config.Config, s *Service) *AuthHandler {
 	return &AuthHandler{
 		config: config,
 		cookieManager: NewCookieManager(config.CookieSecret),
-		db: db,
+		s: s,
 	}
 }
 
@@ -37,7 +35,7 @@ func (h *AuthHandler) RegisterRouter() *http.ServeMux {
 	return m
 }
 func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-	state, err := GenerateStateToken()
+	state, err := h.s.GenerateStateToken()
 	if err != nil {
 		utils.HTTPJsonError(w, "Failed to generate state for session", http.StatusInternalServerError)
 		return
@@ -58,10 +56,6 @@ func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) 
 
 	log.Printf("Redirect uri -> %s", h.config.OAuth2Config.RedirectURL)
 	log.Printf("URL -> %s", url)
-
-	/*utils.HTTPJsonResponse(w, map[string]string{
-		"url": url,
-	}) */
 
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
@@ -105,31 +99,13 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	googleUser, err := GetGoogleUserInfo(ctx, token)
+	googleUser, err := h.s.GetGoogleUserInfo(ctx, token)
 	if err != nil {
 		utils.HTTPJsonError(w, fmt.Errorf("Failed to retrieve Google User Info -> %v", err).Error(), http.StatusInternalServerError)
 		return
 	}
 
-	params := &database.CreateOrUpsertUserParams{
-		GoogleID: googleUser.ID,
-		Email:  googleUser.Email,
-		Name: googleUser.Name,
-		FirstName: pgtype.Text{
-			String: googleUser.FirstName,
-			Valid: true,
-		},
-		LastName:pgtype.Text{
-			String: googleUser.LastName,
-			Valid: true,
-		},
-		Picture:pgtype.Text{
-			String: googleUser.Picture,
-			Valid: true,
-		},
-	}
-
-	u, err := h.db.CreateOrUpsertUser(ctx, *params)
+	u, err := h.s.CreateOrUpdateUser(ctx, googleUser)
 	if err != nil {
 		utils.HTTPJsonError(w, fmt.Errorf("Failed to create or update user record -> %v", err).Error(), http.StatusInternalServerError)
 		return
@@ -150,14 +126,6 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 	}
 	http.SetCookie(w, cookie)
 	http.Redirect(w, r, "/users/info", http.StatusPermanentRedirect)
-/*	utils.HTTPJsonResponse(w, map[string]interface{} {
-		"user": map[string]string{
-			"user_id": string(u.ID),
-			"email": u.Email,
-			"name": u.Name,
-			"picture": u.Picture.String,
-		},
-	})*/
 }
 
 func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
