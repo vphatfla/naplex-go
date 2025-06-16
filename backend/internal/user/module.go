@@ -1,4 +1,4 @@
-package users
+package user
 
 import (
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"

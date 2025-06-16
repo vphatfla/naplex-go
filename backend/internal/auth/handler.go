@@ -12,29 +12,29 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type AuthHandler struct {
+type Handler struct {
 	config *config.Config
 	cookieManager *CookieManager
 	s *Service
 }
 
-func NewAuthHandler(config *config.Config, s *Service) *AuthHandler {
-	return &AuthHandler{
+func NewHandler(config *config.Config, s *Service) *Handler {
+	return &Handler{
 		config: config,
 		cookieManager: NewCookieManager(config.CookieSecret),
 		s: s,
 	}
 }
 
-func (h *AuthHandler) RegisterRouter() *http.ServeMux {
+/* func (h *Handler) RegisterRouter() *http.ServeMux {
 	m := http.NewServeMux()
 
 	m.Handle("GET /google/login", http.HandlerFunc(h.HandleGoogleLogin))
 	m.Handle("GET /google/callback", http.HandlerFunc(h.HandleGoogleCallback))
 
 	return m
-}
-func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
+}*/
+func (h *Handler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := h.s.GenerateStateToken()
 	if err != nil {
 		utils.HTTPJsonError(w, "Failed to generate state for session", http.StatusInternalServerError)
@@ -60,7 +60,7 @@ func (h *AuthHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("oauth_state")
 	if err != nil {
 		utils.HTTPJsonError(w, "missing cookie", http.StatusBadRequest)
@@ -128,7 +128,7 @@ func (h *AuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, "/users/info", http.StatusPermanentRedirect)
 }
 
-func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
         Name:     "session",
         Value:    "",

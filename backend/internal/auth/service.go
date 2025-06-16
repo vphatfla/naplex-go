@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/vphatfla/naplex-go/backend/internal/auth"
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
 	"golang.org/x/oauth2"
 )
