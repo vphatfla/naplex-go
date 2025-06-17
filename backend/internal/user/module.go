@@ -6,8 +6,8 @@ import (
 )
 
 type Module struct {
-	h *users.Handler
-	s *users.Service
+	Handler *users.Handler
+	Service *users.Service
 }
 
 func NewModule(q *database.Queries) *Module {

@@ -11,6 +11,7 @@ import (
 	"github.com/vphatfla/naplex-go/backend/internal/config"
 	"github.com/vphatfla/naplex-go/backend/internal/middleware"
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
+	"github.com/vphatfla/naplex-go/backend/internal/user"
 )
 
 func main() {
@@ -33,6 +34,7 @@ func main() {
 
 	// Modules declare
 	authModule := auth.NewModule(config, queries)
+	userModule := user.NewModule(q)
 	// chi router
 	r := chi.NewRouter()
 
@@ -45,7 +47,11 @@ func main() {
 		r.Get("/google/callback", authModule.Handler.HandleGoogleCallback)
 		r.Get("/logout", authModule.Handler.HandleLogout)
 	})
-
+	
+	// User
+	r.Route("/user", func(r chi.Router) {
+		r.Get("/profile", userModule.Handler.)
+	})
 
 	port := ":8080"
 	log.Printf("Http Server starting on %v", port)
