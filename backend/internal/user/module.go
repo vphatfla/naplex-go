@@ -2,12 +2,11 @@ package user
 
 import (
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
-	"github.com/vphatfla/naplex-go/backend/internal/users"
 )
 
 type Module struct {
-	Handler *users.Handler
-	Service *users.Service
+	Handler *Handler
+	Service *Service
 }
 
 func NewModule(q *database.Queries) *Module {
@@ -15,7 +14,7 @@ func NewModule(q *database.Queries) *Module {
 	h := NewHandler(s)
 
 	return &Module{
-		h: h,
-		s: s,
+		Handler: h,
+		Service: s,
 	}
 }

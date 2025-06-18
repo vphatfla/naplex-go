@@ -46,3 +46,19 @@ func (s *Service) GetUserProfile(ctx context.Context, id int32) (*database.User,
 	}
 	return &u, nil
 }
+
+func (s *Service) UpdateUserProfile(ctx context.Context, u *database.User) (*database.User, error) {
+	params := &database.UpdateUserProfileParams{
+		ID: u.ID,
+		Name: u.Name,
+		FirstName: u.FirstName,
+		LastName: u.LastName,
+		Picture: u.Picture,
+	}
+
+	newU, err := s.q.UpdateUserProfile(ctx, *params)
+	if err != nil {
+		return nil, err
+	}
+	return &newU, nil
+}

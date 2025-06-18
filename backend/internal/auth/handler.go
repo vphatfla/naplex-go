@@ -113,7 +113,7 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	// create session data
 	session := Session{
-		UserID: int(u.ID),
+		UserID: u.ID,
 		Email: u.Email,
 		Name: u.Name,
 		ExpiresAt: time.Now().Add(7 * 24 * time.Hour), // 7 days
@@ -125,7 +125,7 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, cookie)
-	http.Redirect(w, r, "/users/info", http.StatusPermanentRedirect)
+	http.Redirect(w, r, "/user/profile", http.StatusPermanentRedirect)
 }
 
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {

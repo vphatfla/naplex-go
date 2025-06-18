@@ -34,7 +34,10 @@ func main() {
 
 	// Modules declare
 	authModule := auth.NewModule(config, queries)
-	userModule := user.NewModule(q)
+	userModule := user.NewModule(queries)
+
+	// Middleware declare
+	authM := auth.NewMiddleware(config)
 	// chi router
 	r := chi.NewRouter()
 
@@ -47,10 +50,12 @@ func main() {
 		r.Get("/google/callback", authModule.Handler.HandleGoogleCallback)
 		r.Get("/logout", authModule.Handler.HandleLogout)
 	})
-	
+
 	// User
 	r.Route("/user", func(r chi.Router) {
-		r.Get("/profile", userModule.Handler.)
+		r.Use(authM.RequireAuth)
+		r.Get("/profile", userModule.Handler.HandleGetUser)
+		r.Post("/profile", userModule.Handler.HandleUpdateUser)
 	})
 
 	port := ":8080"

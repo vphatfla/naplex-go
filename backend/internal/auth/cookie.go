@@ -17,7 +17,8 @@ import (
 
 // Data encrypted and stored in the cookie
 type Session struct {
-	UserID int `json:"user_id"`
+	// UserID field id in the user table is SERIAL, which is 4 bytes -> int32 in golang
+	UserID int32`json:"user_id"`
 	Email string `json:"email"`
 	Name string `json:"name"`
 	ExpiresAt time.Time `json:"expires_at"`
