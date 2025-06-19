@@ -315,6 +315,32 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 	return i, err
 }
 
+const getUserQuestion = `-- name: GetUserQuestion :one
+SELECT uid, qid, status, attempts, saved, hidden, created_at, updated_at FROM users_questions
+WHERE uid = $1 AND qid = $2
+`
+
+type GetUserQuestionParams struct {
+	Uid int32
+	Qid int32
+}
+
+func (q *Queries) GetUserQuestion(ctx context.Context, arg GetUserQuestionParams) (UsersQuestion, error) {
+	row := q.db.QueryRow(ctx, getUserQuestion, arg.Uid, arg.Qid)
+	var i UsersQuestion
+	err := row.Scan(
+		&i.Uid,
+		&i.Qid,
+		&i.Status,
+		&i.Attempts,
+		&i.Saved,
+		&i.Hidden,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUsersByIDs = `-- name: GetUsersByIDs :many
 SELECT id, google_id, email, name, first_name, last_name, picture, created_at, updated_at, last_login_at FROM users
 WHERE id = ANY($1::int[])

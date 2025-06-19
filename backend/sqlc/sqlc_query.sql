@@ -167,3 +167,7 @@ UPDATE questions
 SET title = $1, question = $2, multiple_choices = $3, correct_answer = $4, explanation = $5, keywords = $6, link = $7
 WHERE id = $8
 RETURNING id;
+
+-- name: GetUserQuestion :one
+SELECT * FROM users_questions
+WHERE uid = $1 AND qid = $2;
