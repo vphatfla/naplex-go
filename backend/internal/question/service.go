@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
 )
 
@@ -27,11 +29,18 @@ func (s *Service) GetQuestion(ctx context.Context, uid int32, qid int32) (*Quest
 		Uid: uid,
 		Qid: qid,
 	}
+
 	uq, err := s.q.GetUserQuestion(ctx, *params)
-	if err != nil {
+	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
-
+	if err == pgx.ErrNoRows {
+		uq = database.UsersQuestion{
+			Attempts: pgtype.Int4{Int32: 0, Valid: true},
+			Saved: pgtype.Bool{Bool: false, Valid: true},
+			Hidden: pgtype.Bool{Bool: false, Valid: true},
+		}
+	}
 	questionDTO := &QuestionDTO{
 		ID:               q.ID,
 		Title:            q.Title,

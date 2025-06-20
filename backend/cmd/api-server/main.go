@@ -10,6 +10,7 @@ import (
 	"github.com/vphatfla/naplex-go/backend/internal/auth"
 	"github.com/vphatfla/naplex-go/backend/internal/config"
 	"github.com/vphatfla/naplex-go/backend/internal/middleware"
+	"github.com/vphatfla/naplex-go/backend/internal/question"
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
 	"github.com/vphatfla/naplex-go/backend/internal/user"
 )
@@ -18,7 +19,7 @@ func main() {
 	log.Printf("Hello from naplex go backend")
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Failed loading env %v", err);
+		log.Fatalf("Failed loading env %v", err)
 	}
 
 	ctx := context.Background()
@@ -35,7 +36,7 @@ func main() {
 	// Modules declare
 	authModule := auth.NewModule(config, queries)
 	userModule := user.NewModule(queries)
-
+	questionModule := question.NewModule(queries)
 	// Middleware declare
 	authM := auth.NewMiddleware(config)
 	// chi router
@@ -56,6 +57,12 @@ func main() {
 		r.Use(authM.RequireAuth)
 		r.Get("/profile", userModule.Handler.HandleGetUser)
 		r.Post("/profile", userModule.Handler.HandleUpdateUser)
+	})
+
+	// Question
+	r.Route("/question", func(r chi.Router) {
+		r.Use(authM.RequireAuth)
+		r.Get("/", questionModule.Handler.HandleGetQuestion)
 	})
 
 	port := ":8080"

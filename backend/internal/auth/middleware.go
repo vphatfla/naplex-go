@@ -18,7 +18,7 @@ type Middleware struct {
 	cookieManager *CookieManager
 }
 
-func NewMiddleware(config *config.Config) *Middleware{
+func NewMiddleware(config *config.Config) *Middleware {
 	return &Middleware{
 		cookieManager: NewCookieManager(config.CookieSecret),
 	}
@@ -28,7 +28,7 @@ func (m *Middleware) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionCookie, err := r.Cookie("session")
 		if err != nil {
-			utils.HTTPJsonError(w, fmt.Errorf("Error getting cookie -> %v", err).Error(), http.StatusBadRequest)
+			utils.HTTPJsonError(w, fmt.Errorf("Error getting cookie: %v", err).Error(), http.StatusBadRequest)
 			return
 		}
 
