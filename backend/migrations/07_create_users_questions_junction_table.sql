@@ -5,7 +5,7 @@ CREATE TYPE question_status AS ENUM ('FAILED', 'PASSED', 'NA');
 CREATE TABLE users_questions (
     uid INT NOT NULL,
     qid INT NOT NULL,
-    status question_status,
+    status question_status DEFAULT 'NA',
     attempts INT DEFAULT 0,
     saved BOOLEAN DEFAULT FALSE,
     hidden BOOLEAN DEFAULT FALSE,

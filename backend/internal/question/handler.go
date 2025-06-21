@@ -2,6 +2,7 @@ package question
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -44,4 +45,43 @@ func (h *Handler) HandleGetQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.HTTPJsonResponse(w, qRes)
+}
+
+func (h *Handler) HandleCreateOrUpdateUserQuestion(w http.ResponseWriter, r *http.Request) {
+	uid, err := assert.AssertAndGetValue[int32](r.Context().Value("user_id"))
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var qDTO QuestionDTO
+	err = json.NewDecoder(r.Body).Decode(&qDTO)
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	newQDTO, err := h.s.CreateOrUpdateUserQuestion(context.Background(), uid, &qDTO)
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	utils.HTTPJsonResponse(w, newQDTO)
+}
+
+func (h *Handler) HandlerGetAllPassedQuestion(w http.ResponseWriter, r *http.Request) {
+	uid, err := assert.AssertAndGetValue[int32](r.Context().Value("user_id"))
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	list, err := h.s.GetAllPassedQuestion(context.Background(), uid)
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utils.HTTPJsonResponse(w, list)
 }

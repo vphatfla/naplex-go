@@ -2,6 +2,7 @@ package question
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -49,25 +50,51 @@ func (s *Service) GetQuestion(ctx context.Context, uid int32, qid int32) (*Quest
 	return qDTO, nil
 }
 
-func (s *Service) UpdateUserQuestion(ctx context.Context, uid int32, qDTO *QuestionDTO) (*QuestionDTO, error) {
-	params := &database.UpdateUserQuestionParams{
-		Status: database.NullQuestionStatus{QuestionStatus: qDTO.Status},
+func (s *Service) CreateOrUpdateUserQuestion(ctx context.Context, uid int32, qDTO *QuestionDTO) (*QuestionDTO, error) {
+	params := &database.CreateOrUpdateUserQuestionParams{
+		Column1: qDTO.Status,
 		Attempts: pgtype.Int4{Int32: qDTO.Attempts, Valid: true},
 		Saved: pgtype.Bool{Bool: qDTO.Saved, Valid: true},
 		Hidden: pgtype.Bool{Bool: qDTO.Hidden, Valid: true},
 		Uid: uid,
 		Qid: qDTO.ID,
 	}
-
-	uq, err := s.q.UpdateUserQuestion(ctx, *params)
+	uq, err := s.q.CreateOrUpdateUserQuestion(ctx, *params)
 	if err != nil {
 		return nil, err
 	}
-
 	qDTO.Status = uq.Status.QuestionStatus
 	qDTO.Attempts = uq.Attempts.Int32
 	qDTO.Saved = uq.Saved.Bool
 	qDTO.Hidden = uq.Hidden.Bool
 
 	return qDTO, nil
+}
+
+func (s *Service) GetAllPassedQuestion(ctx context.Context, uid int32) ([]QuestionDTO, error) {
+	temp, err := s.q.GetAllPassedQuestion(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+	var list []QuestionDTO
+
+	for _,item := range temp {
+		qDTO := &QuestionDTO{
+			ID: item.Qid,
+			Title: item.Title,
+			Question: item.Question,
+			Multiple_choices: strings.Split(item.MultipleChoices, "\n"),
+			Correct_answer: item.CorrectAnswer,
+			Explanation: item.Explanation.String,
+			Keywords: strings.Split(item.Keywords.String, ","),
+			Link: item.Link.String,
+			Status: item.Status.QuestionStatus,
+			Attempts: item.Attempts.Int32,
+			Saved: item.Saved.Bool,
+			Hidden: item.Hidden.Bool,
+		}
+		list = append(list, *qDTO)
+	}
+
+	return list, nil
 }

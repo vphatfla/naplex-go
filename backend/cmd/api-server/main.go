@@ -62,7 +62,10 @@ func main() {
 	// Question
 	r.Route("/question", func(r chi.Router) {
 		r.Use(authM.RequireAuth)
+
 		r.Get("/", questionModule.Handler.HandleGetQuestion)
+		r.Post("/", questionModule.Handler.HandleCreateOrUpdateUserQuestion)
+		r.Get("/passed", questionModule.Handler.HandlerGetAllPassedQuestion)
 	})
 
 	port := ":8080"

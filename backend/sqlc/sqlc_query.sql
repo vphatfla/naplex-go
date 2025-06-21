@@ -172,15 +172,22 @@ RETURNING id;
 SELECT * FROM users_questions
 WHERE uid = $1 AND qid = $2;
 
--- name: UpdateUserQuestion :one
-UPDATE users_questions
-SET
-    status = $1,
-    attempts = $2,
-    saved = $3,
-    hidden = $4,
+-- name: CreateOrUpdateUserQuestion :one
+INSERT INTO users_questions (uid, qid, status, attempts, saved, hidden)
+VALUES ($5, $6, $1::question_status, $2, $3, $4)
+ON CONFLICT (uid, qid)
+DO UPDATE SET
+    status = EXCLUDED.status,
+    attempts = EXCLUDED.attempts,
+    saved = EXCLUDED.saved,
+    hidden = EXCLUDED.hidden,
     updated_at = NOW()
-WHERE
-    uid = $5
-    AND qid = $6
 RETURNING *;
+
+-- name: GetAllPassedQuestion :many
+SELECT
+    uq.*,
+    q.*
+FROM users_questions uq
+JOIN questions q ON q.id = uq.qid
+WHERE uq.uid = $1 AND uq.status = 'PASSED'::question_status;

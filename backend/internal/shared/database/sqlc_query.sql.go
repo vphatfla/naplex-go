@@ -52,6 +52,51 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const createOrUpdateUserQuestion = `-- name: CreateOrUpdateUserQuestion :one
+INSERT INTO users_questions (uid, qid, status, attempts, saved, hidden)
+VALUES ($5, $6, $1::question_status, $2, $3, $4)
+ON CONFLICT (uid, qid)
+DO UPDATE SET
+    status = EXCLUDED.status,
+    attempts = EXCLUDED.attempts,
+    saved = EXCLUDED.saved,
+    hidden = EXCLUDED.hidden,
+    updated_at = NOW()
+RETURNING uid, qid, status, attempts, saved, hidden, created_at, updated_at
+`
+
+type CreateOrUpdateUserQuestionParams struct {
+	Column1  QuestionStatus
+	Attempts pgtype.Int4
+	Saved    pgtype.Bool
+	Hidden   pgtype.Bool
+	Uid      int32
+	Qid      int32
+}
+
+func (q *Queries) CreateOrUpdateUserQuestion(ctx context.Context, arg CreateOrUpdateUserQuestionParams) (UsersQuestion, error) {
+	row := q.db.QueryRow(ctx, createOrUpdateUserQuestion,
+		arg.Column1,
+		arg.Attempts,
+		arg.Saved,
+		arg.Hidden,
+		arg.Uid,
+		arg.Qid,
+	)
+	var i UsersQuestion
+	err := row.Scan(
+		&i.Uid,
+		&i.Qid,
+		&i.Status,
+		&i.Attempts,
+		&i.Saved,
+		&i.Hidden,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createOrUpsertUser = `-- name: CreateOrUpsertUser :one
 INSERT INTO users (
     google_id,
@@ -185,6 +230,71 @@ WHERE email = $1
 func (q *Queries) DeleteUserByEmail(ctx context.Context, email string) error {
 	_, err := q.db.Exec(ctx, deleteUserByEmail, email)
 	return err
+}
+
+const getAllPassedQuestion = `-- name: GetAllPassedQuestion :many
+SELECT
+    uq.uid, uq.qid, uq.status, uq.attempts, uq.saved, uq.hidden, uq.created_at, uq.updated_at,
+    q.id, q.title, q.question, q.multiple_choices, q.correct_answer, q.explanation, q.keywords, q.link
+FROM users_questions uq
+JOIN questions q ON q.id = uq.qid
+WHERE uq.uid = $1 AND uq.status = 'PASSED'::question_status
+`
+
+type GetAllPassedQuestionRow struct {
+	Uid             int32
+	Qid             int32
+	Status          NullQuestionStatus
+	Attempts        pgtype.Int4
+	Saved           pgtype.Bool
+	Hidden          pgtype.Bool
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	ID              int32
+	Title           string
+	Question        string
+	MultipleChoices string
+	CorrectAnswer   string
+	Explanation     pgtype.Text
+	Keywords        pgtype.Text
+	Link            pgtype.Text
+}
+
+func (q *Queries) GetAllPassedQuestion(ctx context.Context, uid int32) ([]GetAllPassedQuestionRow, error) {
+	rows, err := q.db.Query(ctx, getAllPassedQuestion, uid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllPassedQuestionRow
+	for rows.Next() {
+		var i GetAllPassedQuestionRow
+		if err := rows.Scan(
+			&i.Uid,
+			&i.Qid,
+			&i.Status,
+			&i.Attempts,
+			&i.Saved,
+			&i.Hidden,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ID,
+			&i.Title,
+			&i.Question,
+			&i.MultipleChoices,
+			&i.CorrectAnswer,
+			&i.Explanation,
+			&i.Keywords,
+			&i.Link,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getDailyNewUsers = `-- name: GetDailyNewUsers :many
@@ -732,52 +842,6 @@ func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfilePa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.LastLoginAt,
-	)
-	return i, err
-}
-
-const updateUserQuestion = `-- name: UpdateUserQuestion :one
-UPDATE users_questions
-SET
-    status = $1,
-    attempts = $2,
-    saved = $3,
-    hidden = $4,
-    updated_at = NOW()
-WHERE
-    uid = $5
-    AND qid = $6
-RETURNING uid, qid, status, attempts, saved, hidden, created_at, updated_at
-`
-
-type UpdateUserQuestionParams struct {
-	Status   NullQuestionStatus
-	Attempts pgtype.Int4
-	Saved    pgtype.Bool
-	Hidden   pgtype.Bool
-	Uid      int32
-	Qid      int32
-}
-
-func (q *Queries) UpdateUserQuestion(ctx context.Context, arg UpdateUserQuestionParams) (UsersQuestion, error) {
-	row := q.db.QueryRow(ctx, updateUserQuestion,
-		arg.Status,
-		arg.Attempts,
-		arg.Saved,
-		arg.Hidden,
-		arg.Uid,
-		arg.Qid,
-	)
-	var i UsersQuestion
-	err := row.Scan(
-		&i.Uid,
-		&i.Qid,
-		&i.Status,
-		&i.Attempts,
-		&i.Saved,
-		&i.Hidden,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }
