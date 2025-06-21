@@ -171,3 +171,16 @@ RETURNING id;
 -- name: GetUserQuestion :one
 SELECT * FROM users_questions
 WHERE uid = $1 AND qid = $2;
+
+-- name: UpdateUserQuestion :one
+UPDATE users_questions
+SET
+    status = $1,
+    attempts = $2,
+    saved = $3,
+    hidden = $4,
+    updated_at = NOW()
+WHERE
+    uid = $5
+    AND qid = $6
+RETURNING *;

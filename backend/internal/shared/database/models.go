@@ -16,6 +16,7 @@ type QuestionStatus string
 const (
 	QuestionStatusFAILED QuestionStatus = "FAILED"
 	QuestionStatusPASSED QuestionStatus = "PASSED"
+	QuestionStatusNA     QuestionStatus = "NA"
 )
 
 func (e *QuestionStatus) Scan(src interface{}) error {

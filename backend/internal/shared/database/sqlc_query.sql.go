@@ -735,3 +735,49 @@ func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfilePa
 	)
 	return i, err
 }
+
+const updateUserQuestion = `-- name: UpdateUserQuestion :one
+UPDATE users_questions
+SET
+    status = $1,
+    attempts = $2,
+    saved = $3,
+    hidden = $4,
+    updated_at = NOW()
+WHERE
+    uid = $5
+    AND qid = $6
+RETURNING uid, qid, status, attempts, saved, hidden, created_at, updated_at
+`
+
+type UpdateUserQuestionParams struct {
+	Status   NullQuestionStatus
+	Attempts pgtype.Int4
+	Saved    pgtype.Bool
+	Hidden   pgtype.Bool
+	Uid      int32
+	Qid      int32
+}
+
+func (q *Queries) UpdateUserQuestion(ctx context.Context, arg UpdateUserQuestionParams) (UsersQuestion, error) {
+	row := q.db.QueryRow(ctx, updateUserQuestion,
+		arg.Status,
+		arg.Attempts,
+		arg.Saved,
+		arg.Hidden,
+		arg.Uid,
+		arg.Qid,
+	)
+	var i UsersQuestion
+	err := row.Scan(
+		&i.Uid,
+		&i.Qid,
+		&i.Status,
+		&i.Attempts,
+		&i.Saved,
+		&i.Hidden,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}

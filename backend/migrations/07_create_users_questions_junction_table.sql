@@ -1,5 +1,5 @@
 -- Create enum type for the status
-CREATE TYPE question_status AS ENUM ('FAILED', 'PASSED');
+CREATE TYPE question_status AS ENUM ('FAILED', 'PASSED', 'NA');
 
 -- Create the table
 CREATE TABLE users_questions (
