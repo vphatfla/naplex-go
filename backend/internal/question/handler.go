@@ -85,3 +85,46 @@ func (h *Handler) HandlerGetAllPassedQuestion(w http.ResponseWriter, r *http.Req
 
 	utils.HTTPJsonResponse(w, list)
 }
+
+func (h *Handler) HandlerGetAllFailedQuestion(w http.ResponseWriter, r *http.Request) {
+	uid, err := assert.AssertAndGetValue[int32](r.Context().Value("user_id"))
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	list, err := h.s.GetAllFailedQuestion(context.Background(), uid)
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utils.HTTPJsonResponse(w, list)
+}
+
+func (h *Handler) HandlerGetRandomDailyQuestion(w http.ResponseWriter, r *http.Request) {
+	uid, err := assert.AssertAndGetValue[int32](r.Context().Value("user_id"))
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	numQuestionStr := r.URL.Query().Get("num_question")
+	if numQuestionStr == "" {
+		utils.HTTPJsonError(w, "num_question is required (limit)", http.StatusBadRequest)
+		return
+	}
+	numQuestion, err := strconv.Atoi(numQuestionStr)
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	list, err := h.s.GetRandomDailyQuestions(context.Background(), uid, int32(numQuestion))
+	if err != nil {
+		utils.HTTPJsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utils.HTTPJsonResponse(w, list)
+}

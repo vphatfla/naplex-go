@@ -232,6 +232,71 @@ func (q *Queries) DeleteUserByEmail(ctx context.Context, email string) error {
 	return err
 }
 
+const getAllFailedQuestion = `-- name: GetAllFailedQuestion :many
+SELECT
+    uq.uid, uq.qid, uq.status, uq.attempts, uq.saved, uq.hidden, uq.created_at, uq.updated_at,
+    q.id, q.title, q.question, q.multiple_choices, q.correct_answer, q.explanation, q.keywords, q.link
+FROM users_questions uq
+JOIN questions q ON q.id = uq.qid
+WHERE uq.uid = $1 AND uq.status = 'FAILED'::question_status
+`
+
+type GetAllFailedQuestionRow struct {
+	Uid             int32
+	Qid             int32
+	Status          NullQuestionStatus
+	Attempts        pgtype.Int4
+	Saved           pgtype.Bool
+	Hidden          pgtype.Bool
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	ID              int32
+	Title           string
+	Question        string
+	MultipleChoices string
+	CorrectAnswer   string
+	Explanation     pgtype.Text
+	Keywords        pgtype.Text
+	Link            pgtype.Text
+}
+
+func (q *Queries) GetAllFailedQuestion(ctx context.Context, uid int32) ([]GetAllFailedQuestionRow, error) {
+	rows, err := q.db.Query(ctx, getAllFailedQuestion, uid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllFailedQuestionRow
+	for rows.Next() {
+		var i GetAllFailedQuestionRow
+		if err := rows.Scan(
+			&i.Uid,
+			&i.Qid,
+			&i.Status,
+			&i.Attempts,
+			&i.Saved,
+			&i.Hidden,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ID,
+			&i.Title,
+			&i.Question,
+			&i.MultipleChoices,
+			&i.CorrectAnswer,
+			&i.Explanation,
+			&i.Keywords,
+			&i.Link,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllPassedQuestion = `-- name: GetAllPassedQuestion :many
 SELECT
     uq.uid, uq.qid, uq.status, uq.attempts, uq.saved, uq.hidden, uq.created_at, uq.updated_at,
@@ -350,6 +415,84 @@ func (q *Queries) GetQuestionByID(ctx context.Context, id int32) (Question, erro
 		&i.Link,
 	)
 	return i, err
+}
+
+const getRandomDailyQuestions = `-- name: GetRandomDailyQuestions :many
+SELECT
+    q.id, q.title, q.question, q.multiple_choices, q.correct_answer, q.explanation, q.keywords, q.link,
+    COALESCE(q.id, uq.qid) AS qid,
+    COALESCE(uq.status, 'NA'::question_status) AS status,
+    COALESCE(uq.attempts, 0) AS attempts,
+    COALESCE(uq.saved, FALSE) AS saved,
+    COALESCE(uq.hidden, FALSE) AS hidden
+FROM
+    questions q
+LEFT JOIN
+    users_questions uq ON uq.qid = q.id AND uq.uid = $1
+WHERE
+    uq.uid IS NULL -- Junction record do not exists
+    OR (
+        uq.status IN ('FAILED'::question_status, 'NA'::question_status)
+        AND
+        uq.hidden = FALSE
+    )
+ORDER BY RANDOM() --randomly order selection
+LIMIT $2
+`
+
+type GetRandomDailyQuestionsParams struct {
+	Uid   int32
+	Limit int32
+}
+
+type GetRandomDailyQuestionsRow struct {
+	ID              int32
+	Title           string
+	Question        string
+	MultipleChoices string
+	CorrectAnswer   string
+	Explanation     pgtype.Text
+	Keywords        pgtype.Text
+	Link            pgtype.Text
+	Qid             int32
+	Status          NullQuestionStatus
+	Attempts        int32
+	Saved           bool
+	Hidden          bool
+}
+
+func (q *Queries) GetRandomDailyQuestions(ctx context.Context, arg GetRandomDailyQuestionsParams) ([]GetRandomDailyQuestionsRow, error) {
+	rows, err := q.db.Query(ctx, getRandomDailyQuestions, arg.Uid, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetRandomDailyQuestionsRow
+	for rows.Next() {
+		var i GetRandomDailyQuestionsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Question,
+			&i.MultipleChoices,
+			&i.CorrectAnswer,
+			&i.Explanation,
+			&i.Keywords,
+			&i.Link,
+			&i.Qid,
+			&i.Status,
+			&i.Attempts,
+			&i.Saved,
+			&i.Hidden,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one

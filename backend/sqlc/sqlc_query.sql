@@ -191,3 +191,33 @@ SELECT
 FROM users_questions uq
 JOIN questions q ON q.id = uq.qid
 WHERE uq.uid = $1 AND uq.status = 'PASSED'::question_status;
+
+-- name: GetAllFailedQuestion :many
+SELECT
+    uq.*,
+    q.*
+FROM users_questions uq
+JOIN questions q ON q.id = uq.qid
+WHERE uq.uid = $1 AND uq.status = 'FAILED'::question_status;
+
+-- name: GetRandomDailyQuestions :many
+SELECT
+    q.*,
+    COALESCE(q.id, uq.qid) AS qid,
+    COALESCE(uq.status, 'NA'::question_status) AS status,
+    COALESCE(uq.attempts, 0) AS attempts,
+    COALESCE(uq.saved, FALSE) AS saved,
+    COALESCE(uq.hidden, FALSE) AS hidden
+FROM
+    questions q
+LEFT JOIN
+    users_questions uq ON uq.qid = q.id AND uq.uid = $1
+WHERE
+    uq.uid IS NULL -- Junction record do not exists
+    OR (
+        uq.status IN ('FAILED'::question_status, 'NA'::question_status)
+        AND
+        uq.hidden = FALSE
+    )
+ORDER BY RANDOM() --randomly order selection
+LIMIT $2;

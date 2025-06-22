@@ -98,3 +98,64 @@ func (s *Service) GetAllPassedQuestion(ctx context.Context, uid int32) ([]Questi
 
 	return list, nil
 }
+
+func (s *Service) GetAllFailedQuestion(ctx context.Context, uid int32) ([]QuestionDTO, error) {
+	temp, err := s.q.GetAllFailedQuestion(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	var list []QuestionDTO
+	for _,item := range temp {
+		qDTO := &QuestionDTO{
+			ID: item.Qid,
+			Title: item.Title,
+			Question: item.Question,
+			Multiple_choices: strings.Split(item.MultipleChoices, "\n"),
+			Correct_answer: item.CorrectAnswer,
+			Explanation: item.Explanation.String,
+			Keywords: strings.Split(item.Keywords.String, ","),
+			Link: item.Link.String,
+			Status: item.Status.QuestionStatus,
+			Attempts: item.Attempts.Int32,
+			Saved: item.Saved.Bool,
+			Hidden: item.Hidden.Bool,
+		}
+		list = append(list, *qDTO)
+	}
+
+	return list, nil
+}
+
+func (s *Service) GetRandomDailyQuestions(ctx context.Context, uid int32, numQuestion int32) ([]QuestionDTO, error) {
+	params := &database.GetRandomDailyQuestionsParams{
+		Uid: uid,
+		Limit: numQuestion,
+	}
+
+	temp, err := s.q.GetRandomDailyQuestions(ctx, *params)
+	if err != nil {
+		return nil, err
+	}
+
+	var list []QuestionDTO
+	for _,item := range temp {
+		qDTO := &QuestionDTO{
+			ID: item.Qid,
+			Title: item.Title,
+			Question: item.Question,
+			Multiple_choices: strings.Split(item.MultipleChoices, "\n"),
+			Correct_answer: item.CorrectAnswer,
+			Explanation: item.Explanation.String,
+			Keywords: strings.Split(item.Keywords.String, ","),
+			Link: item.Link.String,
+			Status: item.Status.QuestionStatus,
+			Attempts: item.Attempts,
+			Saved: item.Saved,
+			Hidden: item.Hidden,
+		}
+		list = append(list, *qDTO)
+	}
+
+	return list, nil
+}

@@ -66,6 +66,9 @@ func main() {
 		r.Get("/", questionModule.Handler.HandleGetQuestion)
 		r.Post("/", questionModule.Handler.HandleCreateOrUpdateUserQuestion)
 		r.Get("/passed", questionModule.Handler.HandlerGetAllPassedQuestion)
+		r.Get("/failed", questionModule.Handler.HandlerGetAllFailedQuestion)
+
+		r.Get("/daily", questionModule.Handler.HandlerGetRandomDailyQuestion)
 	})
 
 	port := ":8080"
