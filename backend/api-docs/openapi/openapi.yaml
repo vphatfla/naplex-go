@@ -2,119 +2,177 @@ openapi: 3.1.0
 info:
   title: backend-apis
   version: 0.0.0
-server:
-  - url: localhost:8000
+  description: NAPLEX Go Backend API Documentation
+servers:
+  - url: http://localhost:8080
     description: Local Development Server
-schemas:
-  User:
-    type: Object
-    properties:
-      id:
-        type: integer
-        format: int64
-        description: UID
-        readOnly: true
-      google_id:
-        type: string
-        description: The user's Google ID.
-        readOnly: true
-      email:
-        type: string
-        format: email
-        description: The user's email address.
-      name:
-        type: string
-        description: The user's full name.
-      first_name:
-        type: string
-        description: The user's first name.
-      last_name:
-        type: string
-        description: The user's last name.
-      picture:
-        type: string
-        format: uri
-        description: URL to the user's profile picture.
-      created_at:
-        type: string
-        format: date-time
-        description: The timestamp when the user was created.
-        readOnly: true
-      updated_at:
-        type: string
-        format: date-time
-        description: The timestamp when the user was last updated.
-        readOnly: true
-      last_login_at:
-        type: string
-        format: date-time
-        description: The timestamp of the user's last login.
-        readOnly: true
-  Question:
+
+components:
+  schemas:
+    User:
       type: object
       properties:
-        id:
+        user_id:
           type: integer
-          format: int64
-          description: The unique identifier for the question.
+          format: int32
+          description: User ID
           readOnly: true
-        title:
+        google_id:
           type: string
-          description: The title of the question.
-        question:
+          description: The user's Google ID
+          readOnly: true
+        email:
           type: string
-          description: The full text of the question.
-        multiple_choices:
+          format: email
+          description: The user's email address
+        name:
           type: string
-          description: A JSON string or delimited string of multiple choice answers.
-        correct_answer:
+          description: The user's full name
+        first_name:
           type: string
-          description: The correct answer to the question.
-        explanation:
+          description: The user's first name
+        last_name:
           type: string
-          description: An explanation for the correct answer.
-        keywords:
-          type: string
-          description: Keywords associated with the question.
-        link:
+          description: The user's last name
+        picture:
           type: string
           format: uri
-          description: A link to a resource for more information.
-    UserQuestion:
-      type: object
-      properties:
-        uid:
-          type: integer
-          description: The ID of the user.
-        qid:
-          type: integer
-          description: The ID of the question.
-        status:
-          type: string
-          enum: [answered, unanswered, marked_for_review]
-          description: The user's status for this question.
-        attempts:
-          type: integer
-          description: The number of attempts the user has made on this question.
-        saved:
-          type: boolean
-          description: Whether the user has saved this question.
-        hidden:
-          type: boolean
-          description: Whether the user has hidden this question.
+          description: URL to the user's profile picture
         created_at:
           type: string
           format: date-time
+          description: The timestamp when the user was created
           readOnly: true
         updated_at:
           type: string
           format: date-time
+          description: The timestamp when the user was last updated
           readOnly: true
+        last_login_at:
+          type: string
+          format: date-time
+          description: The timestamp of the user's last login
+          readOnly: true
+      required:
+        - email
+        - name
+
+    Question:
+      type: object
+      properties:
+        question_id:
+          type: integer
+          format: int32
+          description: The unique identifier for the question
+          readOnly: true
+        title:
+          type: string
+          description: The title of the question
+        question:
+          type: string
+          description: The full text of the question
+        multiple_choices:
+          type: array
+          items:
+            type: string
+          description: Array of multiple choice answers
+        correct_answer:
+          type: string
+          description: The correct answer to the question
+        explanation:
+          type: string
+          description: An explanation for the correct answer
+        keywords:
+          type: array
+          items:
+            type: string
+          description: Keywords associated with the question
+        link:
+          type: string
+          format: uri
+          description: A link to a resource for more information
+        status:
+          type: string
+          enum: [PASSED, FAILED, NA]
+          description: The user's status for this question
+        attempts:
+          type: integer
+          format: int32
+          description: The number of attempts the user has made on this question
+        saved:
+          type: boolean
+          description: Whether the user has saved this question
+        hidden:
+          type: boolean
+          description: Whether the user has hidden this question
+      required:
+        - question_id
+        - title
+        - question
+        - multiple_choices
+        - correct_answer
+
+    QuestionUpdate:
+      type: object
+      properties:
+        question_id:
+          type: integer
+          format: int32
+          description: The unique identifier for the question
+        status:
+          type: string
+          enum: [PASSED, FAILED, NA]
+          description: The user's status for this question
+        attempts:
+          type: integer
+          format: int32
+          description: The number of attempts the user has made on this question
+        saved:
+          type: boolean
+          description: Whether the user has saved this question
+        hidden:
+          type: boolean
+          description: Whether the user has hidden this question
+      required:
+        - question_id
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      required:
+        - error
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+
 paths:
+  /auth/google/login:
+    get:
+      summary: Google OAuth Login
+      description: Initiates Google OAuth login flow
+      operationId: handleGoogleLogin
+      tags:
+        - Authentication
+      responses:
+        '307':
+          description: Temporary redirect to Google OAuth
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /auth/google/callback:
     get:
       summary: Google Auth Callback
-      description: Endpoint that Google redirects to after successfully authenticate
+      description: Endpoint that Google redirects to after successful authentication
       operationId: handleGoogleCallbackForSession
       tags:
         - Authentication
@@ -122,65 +180,337 @@ paths:
         - name: code
           in: query
           required: true
-          description: Auth code returned by Google.
+          description: Auth code returned by Google
           schema:
             type: string
         - name: state
           in: query
-          required: false # Recommended for security (CSRF protection)
-          description: An opaque value used to maintain state between the request and callback.
+          required: false
+          description: An opaque value used to maintain state between the request and callback
           schema:
             type: string
-      response:
-        '200':
-          description: Auth successfully. User's session is established. Header contains sessionID.
-           headers:
-            Set-Cookie:
-              schema:
-                type: string
-                example: session_id=abc123xyz; Path=/; HttpOnly; Secure; SameSite=Lax
-              description: |
-                Sets the session cookie on the user's browser.
-                - `HttpOnly`: Prevents access from client-side JavaScript.
-                - `Secure`: Ensures the cookie is only sent over HTTPS.
-                - `SameSite=Lax` or `Strict`: Provides CSRF protection.
-        '400':
-          description: Bad Request. The 'code' is missing, invalid, or has expired.
-        '500':
-          description: Internal Server Error. Failed to exchange code with Google or a database error occurred.
-  /auth/session:
-    get:
-      summary: Get Current Session User
-      description: |
-        Retrieves the profile of the currently authenticated user based on their session cookie.
-        Check if user's session is valid.
-      operationId: getCurrentSession
-      tags:
-        - Authentication
       responses:
-        '200':
-          description: An active session was found.
-        '401':
-          description: Unauthorized. The user is not logged in or the session is invalid/expired.
-  /auth/logout:
-    post:
-      summary: Logout User
-      description: |
-        Delete the current user session on the server/database and instructs the browser to clear the session cookie.
-      operationId: logoutUser
-      tags:
-        - Authentication
-      responses:
-        '200':
-          description: |
-            Logout successful. The server has cleared the session.
-            The response includes a `Set-Cookie` header that expires the cookie on the browser.
+        '308':
+          description: Permanent redirect after successful authentication. User's session is established
           headers:
             Set-Cookie:
               schema:
                 type: string
-                example: session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
-              description: Instructs the browser to delete the session cookie.
-        '401':
-          description: Unauthorized. No active session to log out from.
+                example: session=abc123xyz; Path=/; HttpOnly; Secure; SameSite=Lax
+              description: |
+                Sets the session cookie on the user's browser.
+                - `HttpOnly`: Prevents access from client-side JavaScript.
+                - `Secure`: Ensures the cookie is only sent over HTTPS.
+                - `SameSite=Lax`: Provides CSRF protection.
+        '400':
+          description: Bad Request. The 'code' is missing, invalid, or has expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error. Failed to exchange code with Google or a database error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
+  /auth/logout:
+    get:
+      summary: Logout User
+      description: Delete the current user session and clear the session cookie
+      operationId: logoutUser
+      tags:
+        - Authentication
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Logout successful. The server has cleared the session
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+              description: Instructs the browser to delete the session cookie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: Unauthorized. No active session to log out from
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user/profile:
+    get:
+      summary: Get User Profile
+      description: Retrieves the profile of the currently authenticated user
+      operationId: getCurrentUserProfile
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad Request. Invalid user session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized. User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Update User Profile
+      description: Updates the profile of the currently authenticated user
+      operationId: updateUserProfile
+      tags:
+        - User
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad Request. Invalid input data or user ID mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized. User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /question/:
+    get:
+      summary: Get Question
+      description: Retrieves a specific question by ID along with user's progress
+      operationId: getQuestion
+      tags:
+        - Question
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: question_id
+          in: query
+          required: true
+          description: The ID of the question to retrieve
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Question retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '400':
+          description: Bad Request. Missing or invalid question_id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized. User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create or Update User Question
+      description: Creates or updates the user's status for a specific question
+      operationId: createOrUpdateUserQuestion
+      tags:
+        - Question
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionUpdate'
+      responses:
+        '200':
+          description: User question status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '400':
+          description: Bad Request. Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized. User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /question/passed:
+    get:
+      summary: Get All Passed Questions
+      description: Retrieves all questions that the user has passed
+      operationId: getAllPassedQuestions
+      tags:
+        - Question
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Passed questions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+        '401':
+          description: Unauthorized. User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /question/failed:
+    get:
+      summary: Get All Failed Questions
+      description: Retrieves all questions that the user has failed
+      operationId: getAllFailedQuestions
+      tags:
+        - Question
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Failed questions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+        '401':
+          description: Unauthorized. User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /question/daily:
+    get:
+      summary: Get Random Daily Questions
+      description: Retrieves random daily questions for practice
+      operationId: getRandomDailyQuestions
+      tags:
+        - Question
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: num_question
+          in: query
+          required: true
+          description: Number of questions to retrieve (limit)
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 50
+      responses:
+        '200':
+          description: Random daily questions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+        '400':
+          description: Bad Request. Missing or invalid num_question parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized. User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
