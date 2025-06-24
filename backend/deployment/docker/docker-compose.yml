@@ -20,6 +20,21 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/backend/Dockerfile
+    container_name: naplex-backend
+    restart: unless-stopped
+    environment:
+      DOCKER_DEV: true
+    ports:
+      - "8080:8080"
+    networks:
+      - app_network
+    depends_on:
+      naplex-postgres-db:
+        condition: service_healthy
 
 volumes:
   naplex_postgres_data:

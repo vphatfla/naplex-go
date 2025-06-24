@@ -27,6 +27,9 @@ func (c *DBConfig) ToURLString() string {
 }
 
 func LoadConfig() *Config {
+	if (os.Getenv("DOCKER_DEV") == "true") {
+		os.Setenv("POSTGRES_HOST", "naplex-postgres-db")
+	}
 	return &Config{
 		OAuth2Config: &oauth2.Config{
 			ClientID: os.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
