@@ -44,7 +44,7 @@ func main() {
 
 	// Middlewares
 	r.Use(middleware.Logger)
-
+	r.Use(middleware.AddCors)
 	// Auth
 	r.Route("/auth", func(r chi.Router) {
 		r.Get("/google/login", authModule.Handler.HandleGoogleLogin)

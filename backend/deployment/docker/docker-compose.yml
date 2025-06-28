@@ -23,7 +23,7 @@ services:
   backend:
     build:
       context: ../../
-      dockerfile: deployment/docker/Dockerfile
+      dockerfile: deployment/docker/backend-Dockerfile
     container_name: naplex-backend
     restart: unless-stopped
     environment:

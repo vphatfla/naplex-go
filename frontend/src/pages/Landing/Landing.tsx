@@ -1,8 +1,23 @@
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import GoogleSignInButton from "../../components/auth/GoogleSignInButton";
+import { useAuth } from '../../context/AuthContext';
 
 const Landing = () => {
+    const { user, login } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const error = location.state?.error;
+
+    useEffect(() => {
+        // If user is already authenticated (existed in memory), redirect to home
+        if (user) {
+            navigate('/home');
+        }
+    }, [user, navigate]);
+
     const handleGoogleSignIn = () => {
-        console.log("To be implemented handle google sign in")
+        login();
     }
 
     return (
@@ -15,7 +30,7 @@ const Landing = () => {
           {/* Logo */}
           <div className="text-center mb-[60px]">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-apple-blue rounded-apple text-white text-4xl font-semibold shadow-lg hover:scale-105 transition-transform duration-300 ease-out">
-              M
+              Naplex Go
             </div>
           </div>
           
@@ -24,6 +39,12 @@ const Landing = () => {
             <h1 className="text-[28px] font-semibold text-center mb-3 tracking-tight text-apple-gray-600 dark:text-apple-gray-50">
               Welcome!
             </h1>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-apple-sm">
+                <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+              </div>
+            )}
             
             <GoogleSignInButton onClick={handleGoogleSignIn} />
             
