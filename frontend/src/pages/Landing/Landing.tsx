@@ -10,7 +10,7 @@ const Landing = () => {
     const error = location.state?.error;
 
     useEffect(() => {
-        // If user is already authenticated (existed in memory), redirect to home
+        // If user is already authenticated, redirect to home
         if (user) {
             navigate('/home');
         }
@@ -21,46 +21,55 @@ const Landing = () => {
     }
 
     return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white to-apple-gray-50 dark:from-black dark:to-apple-gray-600 overflow-x-hidden relative">
-        {/* Floating elements for visual interest */}
-        <div className="fixed w-[300px] h-[300px] -top-[150px] -left-[150px] rounded-full bg-gradient-radial from-apple-blue/5 to-transparent animate-float pointer-events-none" />
-        <div className="fixed w-[300px] h-[300px] -bottom-[150px] -right-[150px] rounded-full bg-gradient-radial from-apple-blue/5 to-transparent animate-float pointer-events-none [animation-delay:10s]" />
-        
-        <div className="w-full max-w-[400px] px-5 animate-fade-in-up">
-          {/* Logo */}
-          <div className="text-center mb-[60px]">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-apple-blue rounded-apple text-white text-4xl font-semibold shadow-lg hover:scale-105 transition-transform duration-300 ease-out">
-              Naplex Go
-            </div>
-          </div>
-          
-          {/* Auth Card */}
-          <div className="bg-white dark:bg-black rounded-apple p-12 shadow-xl backdrop-blur-apple border border-apple-gray-200 dark:border-apple-gray-500">
-            <h1 className="text-[28px] font-semibold text-center mb-3 tracking-tight text-apple-gray-600 dark:text-apple-gray-50">
-              Welcome!
-            </h1>
-            
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-apple-sm">
-                <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
-              </div>
-            )}
-            
-            <GoogleSignInButton onClick={handleGoogleSignIn} />
-            
-            {/* Privacy Notice */}
-            <div className="mt-10 pt-6 border-t border-apple-gray-200 dark:border-apple-gray-500 text-center text-xs text-apple-gray-400 leading-relaxed">
-              By continuing, you agree to our{' '}
-              <a href="#" className="hover:border-b hover:border-apple-gray-400 transition-all">
-                Terms of Service
-              </a> and{' '}
-              <a href="#" className="hover:border-b hover:border-apple-gray-400 transition-all">
-                Privacy Policy
-              </a>
-            </div>
-          </div>
+        <div className="min-h-screen bg-white flex">
+            {/* Header */}
+            <header className="fixed top-0 left-0 right-0 h-[88px] bg-white/95 backdrop-blur-[20px] border-b border-[#E5E5E5] z-50">
+                <div className="max-w-[1280px] mx-auto px-5 md:px-[80px] h-full flex justify-between items-center">
+                    <div className="text-xl font-semibold tracking-[-0.4px] text-black">
+                        NAPLEX Go
+                    </div>
+                    <nav className="flex items-center gap-5 md:gap-8">
+                        <a href="#about" className="text-base text-[#555555] tracking-[-0.24px] hover:text-black transition-colors">
+                            About
+                        </a>
+                        <span className="text-[#CCCCCC]">|</span>
+                        <a href="#contact" className="text-base text-[#555555] tracking-[-0.24px] hover:text-black transition-colors">
+                            Contact Us
+                        </a>
+                    </nav>
+                </div>
+            </header>
+
+            {/* Hero Section */}
+            <main className="flex-1 flex items-center justify-center pt-[200px] pb-[200px] px-5">
+                <div className="text-center max-w-[600px]">
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-[-1px] mb-4 leading-[1.2] text-black">
+                        NAPLEX Go
+                    </h1>
+                    <p className="text-lg md:text-xl text-[#666666] tracking-[-0.4px] mb-10 leading-[1.4]">
+                        Your journey to NAPLEX success starts here
+                    </p>
+                    
+                    {error && (
+                        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl">
+                            <p className="text-sm text-red-600 text-center">{error}</p>
+                        </div>
+                    )}
+                    
+                    <GoogleSignInButton onClick={handleGoogleSignIn} />
+                </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="fixed bottom-10 left-0 right-0 justify-center items-center right-0bg-[#FAFAFA] py-10 text-center">
+                <div className="text-base text-[#888888] font-medium tracking-[-0.24px] mb-2">
+                    NAPLEX Go
+                </div>
+                <div className="text-sm text-[#888888] tracking-[-0.08px]">
+                    Copyright © 2025 NAPLEX Go
+                </div>
+            </footer>
         </div>
-    </div>
     )
 }
 

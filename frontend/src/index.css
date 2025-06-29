@@ -167,3 +167,16 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
+
+/* Additional browser-specific backdrop blur support */
+.backdrop-blur-\[20px\] {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Ensure SF Pro font loading */
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  }
+}

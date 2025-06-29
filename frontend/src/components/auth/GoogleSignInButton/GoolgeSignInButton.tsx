@@ -1,18 +1,14 @@
-import Button from '../../common/Button';
-
 interface GoogleSignInButtonProps {
   onClick: () => void;
 }
 
 const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onClick }) => {
   return (
-    <Button 
-      variant="secondary"
-      size="md"
-      className="w-full"
+    <button 
       onClick={onClick}
+      className="inline-flex items-center justify-center gap-3 px-6 py-4 bg-white border border-[#D9D9D9] rounded-xl text-[17px] font-medium text-[#333333] tracking-[-0.4px] cursor-pointer transition-all duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] active:translate-y-0 active:shadow-[0_2px_8px_rgba(0,0,0,0.08)] w-full max-w-[300px] md:w-auto md:max-w-none"
     >
-      <svg className="w-5 h-5" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" viewBox="0 0 24 24">
         <path
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
           fill="#4285F4"
@@ -31,7 +27,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onClick }) => {
         />
       </svg>
       Continue with Google
-    </Button>
+    </button>
   );
 };
 
