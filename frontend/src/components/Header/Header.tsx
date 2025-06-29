@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
+import DarkModeToggle from '../common/Button';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -24,15 +25,17 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-[60px] bg-white/95 backdrop-blur-[20px] border-b border-[#E5E5E5] z-50">
+    <header className="fixed top-0 left-0 right-0 h-[60px] bg-white/95 backdrop-blur-[20px] border-b border-[#E5E5E5]  dark:bg-black dark:text-white z-50">
         <div className="mx-auto px-5 md:px-[80px] h-full flex justify-between items-center">
-                {/* Logo */}
         <Link to="/home" className="flex items-center">
-        <div className="text-2xl font-semibold tracking-[-0.4px] text-black">
+        <div className="text-2xl font-semibold tracking-[-0.4px] text-black dark:text-white">
             Naplex Go
           </div>
         </Link>
 
+        <nav className="flex items-center gap-5 md:gap-8">
+
+        <DarkModeToggle></DarkModeToggle>
         {/* User Menu */}
         <div className="relative" ref={dropdownRef}>
           <button
@@ -93,6 +96,7 @@ const Header: React.FC = () => {
             </div>
           )}
         </div>
+        </nav>
       </div>
     </header>
   );

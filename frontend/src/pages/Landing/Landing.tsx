@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import GoogleSignInButton from "../../components/auth/GoogleSignInButton";
 import { useAuth } from '../../context/AuthContext';
+import DarkModeToggle from '../../components/common/Button';
 
 const Landing = () => {
     const { user, login } = useAuth();
@@ -21,21 +22,22 @@ const Landing = () => {
     }
 
     return (
-        <div className="min-h-screen bg-white flex">
+        <div className="min-h-screen bg-white dark:bg-black flex">
             {/* Header */}
-            <header className="fixed top-0 left-0 right-0 h-[88px] bg-white/95 backdrop-blur-[20px] border-b border-[#E5E5E5] z-50">
+            <header className="fixed top-0 left-0 right-0 h-[88px] bg-white/95 text-black dark:bg-black dark:text-white backdrop-blur-[20px] border-b border-[#E5E5E5] z-50">
                 <div className="mx-auto px-5 md:px-[80px] h-full flex justify-between items-center">
-                    <div className="text-xl font-semibold tracking-[-0.4px] text-black">
+                    <div className="text-xl font-semibold tracking-[-0.4px">
                         NAPLEX Go
                     </div>
                     <nav className="flex items-center gap-5 md:gap-8">
-                        <a href="#about" className="text-base text-[#555555] tracking-[-0.24px] hover:text-black transition-colors">
+                        <a href="#about" className="text-base text-[#555555] tracking-[-0.24px] hover:text-black dark:text-white dark:hover:text-white -colors">
                             About
                         </a>
                         <span className="text-[#CCCCCC]">|</span>
-                        <a href="#contact" className="text-base text-[#555555] tracking-[-0.24px] hover:text-black transition-colors">
+                        <a href="#contact" className="text-base text-[#555555] tracking-[-0.24px] hover:text-black dark:text-white dark:hover:text-white transition-colors">
                             Contact Us
                         </a>
+                        <DarkModeToggle></DarkModeToggle>
                     </nav>
                 </div>
             </header>
@@ -43,7 +45,7 @@ const Landing = () => {
             {/* Hero Section */}
             <main className="flex-1 flex items-center justify-center pt-[200px] pb-[200px] px-5">
                 <div className="text-center max-w-[600px]">
-                    <h1 className="text-4xl md:text-5xl font-bold tracking-[-1px] mb-4 leading-[1.2] text-black">
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-[-1px] mb-4 leading-[1.2] text-black dark:text-white">
                         Naplex Go
                     </h1>
                     <p className="text-lg md:text-xl text-[#666666] tracking-[-0.4px] mb-10! leading-[1.4]">
