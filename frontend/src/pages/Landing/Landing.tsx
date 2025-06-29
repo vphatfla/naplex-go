@@ -24,7 +24,7 @@ const Landing = () => {
         <div className="min-h-screen bg-white flex">
             {/* Header */}
             <header className="fixed top-0 left-0 right-0 h-[88px] bg-white/95 backdrop-blur-[20px] border-b border-[#E5E5E5] z-50">
-                <div className="max-w-[1280px] mx-auto px-5 md:px-[80px] h-full flex justify-between items-center">
+                <div className="mx-auto px-5 md:px-[80px] h-full flex justify-between items-center">
                     <div className="text-xl font-semibold tracking-[-0.4px] text-black">
                         NAPLEX Go
                     </div>
