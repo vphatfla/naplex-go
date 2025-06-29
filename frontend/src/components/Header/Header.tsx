@@ -24,12 +24,12 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-apple border-b border-apple-gray-200 dark:border-apple-gray-500">
-      <div className="max-w-[1200px] mx-auto px-6 h-[52px] flex items-center justify-between">
-        {/* Logo */}
+    <header className="fixed top-0 left-0 right-0 h-[60px] bg-white/95 backdrop-blur-[20px] border-b border-[#E5E5E5] z-50">
+        <div className="mx-auto px-5 md:px-[80px] h-full flex justify-between items-center">
+                {/* Logo */}
         <Link to="/home" className="flex items-center">
-          <div className="w-8 h-8 bg-apple-blue rounded-apple-sm flex items-center justify-center text-white font-semibold text-sm hover:scale-105 transition-transform duration-200">
-            M
+        <div className="text-2xl font-semibold tracking-[-0.4px] text-black">
+            Naplex Go
           </div>
         </Link>
 
@@ -37,12 +37,13 @@ const Header: React.FC = () => {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="w-10 h-10 rounded-full overflow-hidden hover:ring-2 hover:ring-apple-gray-300 dark:hover:ring-apple-gray-400 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-apple-blue"
+            className="w-10 h-10 rounded-2xl overflow-hidden hover:ring-2 hover:ring-apple-gray-300 dark:hover:ring-apple-gray-400 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-apple-blue"
             aria-label="User menu"
           >
             {user?.picture ? (
               <img
                 src={user.picture}
+                referrerPolicy='no-referrer'
                 alt={user.name}
                 className="w-full h-full object-cover"
               />
@@ -57,12 +58,12 @@ const Header: React.FC = () => {
 
           {/* Dropdown Menu */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[240px] bg-white dark:bg-apple-gray-100 rounded-apple-lg shadow-apple-lg border border-apple-gray-200 dark:border-apple-gray-500 overflow-hidden animate-slide-down">
-              <div className="px-4 py-3 border-b border-apple-gray-200 dark:border-apple-gray-500">
-                <p className="text-sm font-medium text-apple-gray-600 dark:text-apple-gray-50 truncate">
+            <div className="absolute right-0 mt-4! w-[240px] bg-white dark:bg-apple-gray-100 rounded-apple-sm shadow-apple-lg border-apple-gray-200 dark:border-apple-gray-500 overflow-hidden animate-slide-down">
+              <div className="px-4 py-3 border-apple-gray-200 dark:border-apple-gray-500">
+                <p className="text-2xl text-[#282828] tracking-[-0.24px] hover:text-black transition-colors">
                   {user?.name}
                 </p>
-                <p className="text-xs text-apple-gray-400 truncate">
+                <p className="text-base text-black tracking-[-0.24px] hover:text-black transition-colors">
                   {user?.email}
                 </p>
               </div>
@@ -71,21 +72,20 @@ const Header: React.FC = () => {
                 <Link
                   to="/profile"
                   onClick={() => setIsDropdownOpen(false)}
-                  className="block px-4 py-2 text-sm text-apple-gray-600 dark:text-apple-gray-50 hover:bg-apple-gray-100 dark:hover:bg-apple-gray-200 transition-colors"
+                  className="block px-4 py-2 text-2xl text-[#282828] tracking-[-0.24px] hover:text-black transition-colors"
                 >
                   Profile
                 </Link>
                 <Link
                   to="/settings"
                   onClick={() => setIsDropdownOpen(false)}
-                  className="block px-4 py-2 text-sm text-apple-gray-600 dark:text-apple-gray-50 hover:bg-apple-gray-100 dark:hover:bg-apple-gray-200 transition-colors"
+                  className="block px-4 py-2 text-2xl text-[#282828] tracking-[-0.24px] hover:text-black transition-colors"
                 >
                   Settings
                 </Link>
-                <hr className="my-2 border-apple-gray-200 dark:border-apple-gray-500" />
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  className="block px-4 py-2 text-2xl  text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >
                   Log out
                 </button>

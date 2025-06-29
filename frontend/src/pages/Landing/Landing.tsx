@@ -44,9 +44,9 @@ const Landing = () => {
             <main className="flex-1 flex items-center justify-center pt-[200px] pb-[200px] px-5">
                 <div className="text-center max-w-[600px]">
                     <h1 className="text-4xl md:text-5xl font-bold tracking-[-1px] mb-4 leading-[1.2] text-black">
-                        NAPLEX Go
+                        Naplex Go
                     </h1>
-                    <p className="text-lg md:text-xl text-[#666666] tracking-[-0.4px] mb-10 leading-[1.4]">
+                    <p className="text-lg md:text-xl text-[#666666] tracking-[-0.4px] mb-10! leading-[1.4]">
                         Your journey to NAPLEX success starts here
                     </p>
                     
