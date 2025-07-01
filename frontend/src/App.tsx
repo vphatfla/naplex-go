@@ -6,6 +6,8 @@ import Callback from './pages/Callback/Callback'
 import Home from './pages/Home/Home'
 import Profile from './pages/Profile/Profile'
 import Settings from './pages/Setting/Setting'
+import DailyQuiz from './pages/DailyQuiz'
+import Question from './pages/Question'
 
 function App() {
   return (
@@ -34,6 +36,22 @@ function App() {
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/daily-quiz"
+          element={
+            <ProtectedRoute>
+              <DailyQuiz />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/question"
+          element={
+            <ProtectedRoute>
+              <Question />
             </ProtectedRoute>
           }
         />
