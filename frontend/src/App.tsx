@@ -6,8 +6,7 @@ import Callback from './pages/Callback/Callback'
 import Home from './pages/Home/Home'
 import Profile from './pages/Profile/Profile'
 import Settings from './pages/Setting/Setting'
-import DailyQuiz from './pages/DailyQuiz'
-import Question from './pages/Question'
+import { DailyQuestion, DailyQuiz, FlaggedQuestion, MissedQuestion, RandomQuiz } from './pages/Quiz'
 
 function App() {
   return (
@@ -48,10 +47,34 @@ function App() {
           }
         />
         <Route
-          path="/question"
+          path="/daily-question"
           element={
             <ProtectedRoute>
-              <Question />
+              <DailyQuestion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/flagged-question"
+          element={
+            <ProtectedRoute>
+              <FlaggedQuestion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/missed-question"
+          element={
+            <ProtectedRoute>
+              <MissedQuestion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/random-quiz"
+          element={
+            <ProtectedRoute>
+              <RandomQuiz />
             </ProtectedRoute>
           }
         />
