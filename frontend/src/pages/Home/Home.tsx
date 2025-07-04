@@ -17,17 +17,11 @@ const Home = () => {
           </p>
         </div>
         <div className="w-1/2 text-center flex flex-col gap-4 animate-fade-in-up items-center justify-center">
-          {
-            <>
             <Link href='daily-question' className='w-100' variant='primary' size='md'>Daily Question</Link>
             <Link href='daily-quiz' className='w-100' variant='primary' size='md'>Daily 10 Question Quiz</Link>
             <Link href='random-quiz' className='w-100' variant='primary' size='md'>Random Quiz</Link>
             <Link href='missed-question' className='w-100' variant='primary' size='md'>Review Your Missed Question</Link>
             <Link href='flagged-question' className='w-100' variant='primary' size='md'>Review Your Flagged Question</Link>
-            </>
-          }
-          {/* <Button className='w-100' onClick={handleDailyPopQuiz}>Daily Pop Quiz</Button>
-          <Button className='w-100' onClick={handleCompQuestion}>Comprehensive Questions</Button> */}
         </div>
       </div>
     </Layout>
