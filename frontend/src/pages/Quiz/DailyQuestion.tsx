@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import Layout from '../../components/Layout/Layout';
 import QuestionCard from '../../components/Quiz/QuestionCard';
-import { useAuth } from '../../context/AuthContext';
 import { questionService } from '../../service';
 import type { Question } from '../../types';
+import Button from '../../components/common/Button/Button';
+import { Link } from '../../components/common/Anchor';
 
 const DailyQuestion = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,8 +36,8 @@ const DailyQuestion = () => {
     }
   };
 
-  const handleComplete = (passed: boolean) => {
-    setCompleted(passed);
+  const handleComplete = () => {
+    setCompleted(true);
   };
 
   const handleNewQuestion = () => {
@@ -101,16 +101,12 @@ const DailyQuestion = () => {
   return (
     <Layout>
       <div className="min-h-[calc(100vh-52px)] py-8 flex items-center justify-center">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-4 flex flex-col gap-10">
           {/* Header */}
           <div className="text-center mb-8 animate-fade-in-up">
             <h1 className="text-3xl md:text-4xl font-semibold text-apple-gray-600 dark:text-apple-gray-50 mb-2">
-              Question of the Day
+              Your Daily Question
             </h1>
-            <p className="text-lg text-apple-gray-400 dark:text-apple-gray-300">
-              {user?.first_name ? `Welcome back, ${user.first_name}!` : 'Welcome back!'} 
-              Test your knowledge with today's question.
-            </p>
           </div>
 
           {/* Question Card */}
@@ -125,36 +121,28 @@ const DailyQuestion = () => {
 
           {/* Actions after completion */}
           {completed && (
-            <div className="mt-8 text-center animate-fade-in">
+            <div className="mt-8 text-center animate-fade-in flex flex-col gap-5">
               <p className="text-apple-gray-400 dark:text-apple-gray-300 mb-6">
                 Great job! You've completed today's question.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
+                <Button
                   onClick={handleNewQuestion}
-                  className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                  variant="secondary"
                 >
                   Try Another Question
-                </button>
-                <button
-                  onClick={() => navigate('/quiz/daily-quiz')}
-                  className="px-6 py-3 bg-apple-gray-200 dark:bg-apple-gray-700 text-apple-gray-600 dark:text-apple-gray-100 rounded-xl font-medium hover:bg-apple-gray-300 dark:hover:bg-apple-gray-600 transition-colors"
+                </Button>
+                <Link
+                  href='/daily-quiz'
+                  variant='primary'
                 >
                   Take Full Quiz (10 Questions)
-                </button>
+                </Link>
               </div>
             </div>
           )}
 
           {/* Daily Streak or Stats (Optional Enhancement) */}
-          <div className="mt-12 p-6 bg-apple-gray-50 dark:bg-apple-gray-800 rounded-2xl text-center">
-            <h3 className="text-lg font-medium text-apple-gray-600 dark:text-apple-gray-50 mb-2">
-              Keep Learning Every Day
-            </h3>
-            <p className="text-apple-gray-400 dark:text-apple-gray-300">
-              Come back tomorrow for a new question to continue your NAPLEX preparation journey.
-            </p>
-          </div>
         </div>
       </div>
     </Layout>

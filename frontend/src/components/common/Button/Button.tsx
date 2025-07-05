@@ -8,16 +8,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const Button: React.FC<ButtonProps> = ({
-    variant = 'secondary',
+    variant = 'primary',
     size = 'md',
     children,
     className = '',
     ...props
 }) => {
     const baseStyles = 'inline-flex items-center justify-center font-normal cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg active:translate-y-0 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed';
-
     const variants = {
-        primary: 'bg-apple-blue hover:bg-apple-blue-dark text-white',
+        primary: 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-[1.02] shadow-lg',
         secondary: 'bg-white dark:bg-black border border-apple-gray-200 dark:border-apple-gray-500 text-apple-gray-600 dark:text-apple-gray-50 hover:bg-apple-gray-50 dark:hover:bg-apple-gray-600',
         ghost: 'bg-transparent hover:bg-apple-gray-50 dark:hover:bg-apple-gray-600 text-apple-gray-600 dark:text-apple-gray-50'
       };

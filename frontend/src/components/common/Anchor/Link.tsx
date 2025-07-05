@@ -19,7 +19,7 @@ const Link = ({
     const baseStyles = 'inline-flex items-center justify-center font-normal cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg active:translate-y-0 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed no-underline';
 
     const variants = {
-        primary: 'bg-blue-500 hover:bg-blue-600 text-white',
+        primary: 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-[1.02] shadow-lg',
         secondary: 'bg-white dark:bg-black border border-gray-200 dark:border-gray-500 text-gray-600 dark:text-gray-50 hover:bg-gray-50 dark:hover:bg-gray-600',
         ghost: 'bg-transparent hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-50'
     };

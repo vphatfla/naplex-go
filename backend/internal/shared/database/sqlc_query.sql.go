@@ -57,10 +57,10 @@ INSERT INTO users_questions (uid, qid, status, attempts, saved, hidden)
 VALUES ($5, $6, $1::question_status, $2, $3, $4)
 ON CONFLICT (uid, qid)
 DO UPDATE SET
-    status = EXCLUDED.status,
-    attempts = EXCLUDED.attempts,
-    saved = EXCLUDED.saved,
-    hidden = EXCLUDED.hidden,
+    status = COALESCE(EXCLUDED.status, users_questions.status),
+    attempts = COALESCE(EXCLUDED.attempts, users_questions.attempts),
+    saved = COALESCE(EXCLUDED.saved, users_questions.saved),
+    hidden = COALESCE(EXCLUDED.hidden, users_questions.hidden),
     updated_at = NOW()
 RETURNING uid, qid, status, attempts, saved, hidden, created_at, updated_at
 `
