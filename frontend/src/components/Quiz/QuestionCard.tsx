@@ -167,10 +167,11 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           <label
             key={index}
             className={`
-              block relative p-5 rounded-2xl border-2 cursor-pointer
+              block relative p-5 rounded-md border-2 cursor-pointer
               transition-all duration-200 transform
               ${getChoiceStyle(choice)}
               ${!showResult && selectedAnswer === choice ? 'scale-[1.02] shadow-lg' : ''}
+              ${!showResult && selectedAnswer === choice ? 'bg-blue-400  dark:text-white' : ''}
               ${!showResult ? 'hover:scale-[1.01] hover:shadow-md' : ''}
             `}
           >
@@ -196,10 +197,6 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
               {getChoiceIcon(choice)}
             </div>
 
-            {/* Selected indicator for non-result state */}
-            {!showResult && selectedAnswer === choice && (
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-full" />
-            )}
           </label>
         ))}
       </div>
@@ -210,7 +207,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           onClick={handleSubmit}
           disabled={!selectedAnswer || isLoading}
           className={`
-            w-full py-4 px-6 rounded-2xl font-medium text-base
+            w-full py-4 px-6 font-medium text-base
             transition-all duration-200 transform
             ${!selectedAnswer || isLoading
               ? 'bg-apple-gray-100 dark:bg-apple-gray-800 text-apple-gray-400 cursor-not-allowed'
@@ -224,7 +221,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 
       {/* Result feedback - simplified and elegant */}
       {showResult && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4 animate-fade-in flex flex-col gap-5">
           {/* Result message */}
           <div className={`
             p-6 rounded-2xl text-center

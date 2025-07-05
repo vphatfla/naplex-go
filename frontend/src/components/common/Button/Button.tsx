@@ -23,7 +23,7 @@ const Button: React.FC<ButtonProps> = ({
       
       const sizes = {
         sm: 'h-10 px-4 text-sm rounded-apple-sm gap-2',
-        md: 'h-14 px-6 text-[17px] rounded-apple-sm gap-3',
+        md: 'h-14 px-6 text-[17px] rounded-md gap-3',
         lg: 'h-16 px-8 text-lg rounded-apple gap-4'
       };
     
