@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import Layout from '../../components/Layout/Layout';
 import QuestionCard from '../../components/Quiz/QuestionCard';
 import { questionService } from '../../service';
@@ -8,7 +7,6 @@ import Button from '../../components/common/Button/Button';
 import { Link } from '../../components/common/Anchor';
 
 const DailyQuestion = () => {
-  const navigate = useNavigate();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

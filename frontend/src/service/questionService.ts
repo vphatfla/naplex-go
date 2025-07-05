@@ -1,11 +1,10 @@
 import type { Question, QuestionUpdate } from "../types";
-
-const API_BASE_URL = 'http://localhost:8080';
+import { endpoints } from "../config/config";
 
 const questionService = {
     async getDailyQuestions(numQuestions: number): Promise<Question[]> {
         const response = await fetch(
-            `${API_BASE_URL}/question/daily?num_question=${numQuestions}`,
+            `${endpoints.question.daily}?num_question=${numQuestions}`,
             {
                 credentials: 'include',
             });
@@ -19,7 +18,7 @@ const questionService = {
 
     async getQuestion(questionId: number): Promise<Question> {
         const response = await fetch(
-            `${API_BASE_URL}/question/?question_id=${questionId}`,
+            `${endpoints.question.base}?question_id=${questionId}`,
             {
                 credentials: 'include',
             });
@@ -32,7 +31,7 @@ const questionService = {
     },
 
     async updateQuestion(update: QuestionUpdate): Promise<Question> {
-        const response = await fetch(`${API_BASE_URL}/question/`, {
+        const response = await fetch(`${endpoints.question.base}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
