@@ -3,8 +3,8 @@ import Layout from '../../components/Layout/Layout';
 import QuestionCard from '../../components/Quiz/QuestionCard';
 import { questionService } from '../../service';
 import type { Question } from '../../types';
-import Button from '../../components/common/Button/Button';
-import { Link } from '../../components/common/Anchor';
+import { InteractiveHoverButton } from '@/components/magicui';
+import Button from '@/components/common/Button/Button';
 
 const DailyQuestion = () => {
   const [question, setQuestion] = useState<Question | null>(null);
@@ -126,16 +126,14 @@ const DailyQuestion = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   onClick={handleNewQuestion}
-                  variant="secondary"
+                  variant='secondary'
                 >
                   Try Another Question
                 </Button>
-                <Link
-                  href='/daily-quiz'
-                  variant='primary'
+                <InteractiveHoverButton
                 >
-                  Take Full Quiz (10 Questions)
-                </Link>
+                  <a href="/daily-quiz">Take Full Quiz (10 Questions)</a>
+                </InteractiveHoverButton>
               </div>
             </div>
           )}
