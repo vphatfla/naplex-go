@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "./sqlc_query.sql"
+    schema: "./processed_questions_table.sql"
+    gen:
+      go:
+        package: "srcDB"
+        out: "."
+        sql_package: "pgx/v5"

@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "./sqlc_query.sql"
+    schema: "./questions_table.sql"
+    gen:
+      go:
+        package: "dstDB"
+        out: "."
+        sql_package: "pgx/v5"
