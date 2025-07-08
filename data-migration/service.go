@@ -7,16 +7,21 @@ import (
 )
 
 // Migration service
-type service struct {
+type Service struct {
 	srcRepository *srcDB.Queries
 	dstRepository *dstDB.Queries
 	batchSize     int
 }
 
-func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, bacthSize int) *service {
-	return &service{
+func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, bacthSize int) *Service {
+	return &Service{
 		srcRepository: srcDB.New(srcPool),
 		dstRepository: dstDB.New(dstPool),
 		batchSize:     bacthSize,
 	}
+}
+
+func (s *Service) StartMigration() error {
+	// TODO
+	return nil
 }
