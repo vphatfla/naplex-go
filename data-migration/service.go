@@ -44,7 +44,6 @@ func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, bacthSize int, num
 }
 
 func (s *Service) StartMigration() error {
-
 	ids, err := s.srcRepository.GetAllIds(context.Background())
 	if err != nil {
 		return err
@@ -83,6 +82,7 @@ func (s *Service) StartMigration() error {
 	for r := range results {
 		log.Println(r.ToString())
 	}
+	close(results)
 	return nil
 }
 
