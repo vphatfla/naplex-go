@@ -16,12 +16,13 @@ import (
 const (
 	multipleChoicesPattern = `(?:^|\s)[A-Z]\.\s(.*?)(?=\s[A-Z]\.\s|$)`
 )
+
 // Migration service
 type Service struct {
 	srcRepository *srcDB.Queries
 	dstRepository *dstDB.Queries
 	batchSize     int
-	numWorkder int
+	numWorkder    int
 }
 
 type result struct {
@@ -38,7 +39,7 @@ func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, bacthSize int, num
 		srcRepository: srcDB.New(srcPool),
 		dstRepository: dstDB.New(dstPool),
 		batchSize:     bacthSize,
-		numWorkder: numWorkder,
+		numWorkder:    numWorkder,
 	}
 }
 
@@ -54,7 +55,7 @@ func (s *Service) StartMigration() error {
 	var wg sync.WaitGroup
 
 	// spin up worker
-	for i := 0; i < s.numWorkder; i+=1 {
+	for i := 0; i < s.numWorkder; i += 1 {
 		wg.Add(1)
 		go s.worker(i, idBatch, results, &wg)
 	}
@@ -66,10 +67,10 @@ func (s *Service) StartMigration() error {
 			break
 		}
 
-		lenList := min(len(ids) - start, s.batchSize)
+		lenList := min(len(ids)-start, s.batchSize)
 		var list []int32
 
-		for i:= start; i < start + lenList; i+=1 {
+		for i := start; i < start+lenList; i += 1 {
 			list = append(list, ids[i])
 		}
 
@@ -94,7 +95,7 @@ func (s *Service) worker(workerId int, idBatch chan []int32, results chan *resul
 		//logic
 		srcQs, err := s.srcRepository.GetProcessedQuestionsInBatch(context.Background(), ids)
 		if err != nil {
-			results <-  &result{
+			results <- &result{
 				ids: ids,
 				err: err,
 			}
@@ -108,13 +109,13 @@ func (s *Service) worker(workerId int, idBatch chan []int32, results chan *resul
 		var dstQsParams []dstDB.CreateQuestionsBatchParams
 		for _, dstQ := range dstQs {
 			p := dstDB.CreateQuestionsBatchParams{
-				Title: dstQ.Title,
-				Question: dstQ.Question,
+				Title:           dstQ.Title,
+				Question:        dstQ.Question,
 				MultipleChoices: dstQ.MultipleChoices,
-				CorrectAnswer: dstQ.CorrectAnswer,
-				Explanation: dstQ.Explanation,
-				Keywords: dstQ.Keywords,
-				Link: dstQ.Link,
+				CorrectAnswer:   dstQ.CorrectAnswer,
+				Explanation:     dstQ.Explanation,
+				Keywords:        dstQ.Keywords,
+				Link:            dstQ.Link,
 			}
 			dstQsParams = append(dstQsParams, p)
 		}
@@ -135,11 +136,11 @@ func (s *Service) worker(workerId int, idBatch chan []int32, results chan *resul
 
 func processQuestion(srcQ *srcDB.ProcessedQuestion, re *regexp.Regexp) dstDB.Question {
 	dstQ := dstDB.Question{
-		Title: srcQ.Title,
-		Question: srcQ.Question,
+		Title:       srcQ.Title,
+		Question:    srcQ.Question,
 		Explanation: srcQ.Explanation,
-		Keywords: srcQ.Keywords,
-		Link: srcQ.Link,
+		Keywords:    srcQ.Keywords,
+		Link:        srcQ.Link,
 	}
 
 	matches := re.FindAllStringSubmatch(srcQ.MultipleChoices, -1)

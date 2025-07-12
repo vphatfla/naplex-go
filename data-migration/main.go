@@ -13,7 +13,7 @@ func worker(jobs chan int, results chan int, wg *sync.WaitGroup) {
 		fmt.Printf("START: worker job %d\n", i)
 		time.Sleep(time.Second)
 		fmt.Printf("END: worker job %d\n", i)
-		results <- i*10
+		results <- i * 10
 	}
 }
 func main() {
@@ -34,8 +34,7 @@ func main() {
 		go worker(jobs, results, &wg)
 	}
 
-
-	for i := 10; i <= 20; i+=1 {
+	for i := 10; i <= 20; i += 1 {
 		jobs <- i
 	}
 	close(jobs)
