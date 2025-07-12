@@ -16,4 +16,5 @@ type ProcessedQuestion struct {
 	CorrectAnswer   string
 	Explanation     pgtype.Text
 	Keywords        pgtype.Text
+	Link            pgtype.Text
 }

@@ -41,3 +41,13 @@ func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) 
 	err := row.Scan(&id)
 	return id, err
 }
+
+type CreateQuestionsBatchParams struct {
+	Title           string
+	Question        string
+	MultipleChoices string
+	CorrectAnswer   string
+	Explanation     pgtype.Text
+	Keywords        pgtype.Text
+	Link            pgtype.Text
+}

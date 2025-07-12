@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS processed_questions (
     multiple_choices TEXT NOT NULL,
     correct_answer TEXT NOT NULL,
     explanation TEXT,
-    keywords TEXT
+    keywords TEXT,
+    link TEXT
 );
