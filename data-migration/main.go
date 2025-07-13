@@ -14,6 +14,7 @@ import (
 const (
 	BATCH_SIZE = 20
 	NUM_WORKER = 3
+	LOG_DIR    = "/log"
 )
 
 func NewPool(ctx context.Context, dbString string) (*pgxpool.Pool, error) {
@@ -66,8 +67,13 @@ func main() {
 		log.Panicf("Can not init dstDBPool: %v", err)
 	}
 
-	s := NewService(srcPool, dstPool, BATCH_SIZE, NUM_WORKER)
+	logWriter, err := NewLogWrite(LOG_DIR)
+	if err != nil {
+		log.Panicf("LogWriter creating failed: %v", err)
+	}
+	defer logWriter.Close()
 
+	s := NewService(srcPool, dstPool, BATCH_SIZE, NUM_WORKER, logWriter)
 	if err := s.StartMigration(); err != nil {
 		log.Panicf("Service migration start error: %v", err)
 	}
