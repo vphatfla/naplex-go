@@ -38,11 +38,11 @@ type result struct {
 func (r *result) ToString() string {
 	return fmt.Sprintf("Ids lens = %d start = %d end = %d with error = %v and msg = %s", len(r.ids), r.ids[0], r.ids[len(r.ids)-1], r.err, r.msg)
 }
-func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, bacthSize int, numWorker int) *Service {
+func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, batchSize int, numWorker int) *Service {
 	return &Service{
 		srcRepository: srcDB.New(srcPool),
 		dstRepository: dstDB.New(dstPool),
-		batchSize:     bacthSize,
+		batchSize:     batchSize,
 		numWorker:    numWorker,
 		multipleChoiceRe: regexp.MustCompile(multipleChoicesPattern),
 	}
@@ -58,7 +58,7 @@ func (s *Service) StartMigration() error {
 	go func() {
 		select {
 			case <- sigChan:
-				log.Println("Receied interrupt signal, cancelling mirgation")
+				log.Println("Received interrupt signal, cancelling migration")
 				cancel()
 			case <-ctx.Done():
 				// do nothing
@@ -74,36 +74,45 @@ func (s *Service) StartMigration() error {
 	results := make(chan *result)
 	var wg sync.WaitGroup
 
+	// receiver of results chan
+	// this need to be ready in order for the worker to send the result in
+	resultDone := make(chan struct{})
+	go func() {
+		for r := range results {
+			log.Println(r.ToString())
+		}
+		log.Printf("Results processing FINISHED")
+		close(resultDone)
+	}()
+
+	// receiver of idBatch, sender of results chan
 	// spin up worker
+	// worker is a reciever of idBatch channel need to be ready before the main routine can send batch into the channel
 	for i := 0; i < s.numWorker; i += 1 {
 		wg.Add(1)
 		go s.worker(ctx, i, idBatch, results, &wg)
 	}
 
+	// sender to idBatch
 	// divide ids into batches and send to idBatch channel
-	start := 0
-	for {
-		if start >= len(ids) {
-			break
+	for i := 0; i < len(ids); i += s.batchSize {
+		end := min(i+s.batchSize, len(ids))
+		select {
+			case idBatch <- ids[i:end]:
+			case <-ctx.Done():
+				// handle interrupt
+				close(idBatch)
+				wg.Wait()
+				close(results)
+				<-resultDone
+				return fmt.Errorf("migration cancelled at batch start %d end  %d : %w", i, end, ctx.Err())
 		}
-
-		lenList := min(len(ids)-start, s.batchSize)
-		var list []int32
-
-		for i := start; i < start+lenList; i += 1 {
-			list = append(list, ids[i])
-		}
-
-		idBatch <- list
-		start += lenList
-	}
-	for r := range results {
-		log.Println(r.ToString())
 	}
 
 	close(idBatch)
 	wg.Wait()
 	close(results)
+	<-resultDone
 	return nil
 }
 
@@ -118,7 +127,7 @@ func (s *Service) worker(ctx context.Context,  workerId int, idBatch chan []int3
 					return
 				}
 
-				srcQs, err := s.srcRepository.GetProcessedQuestionsInBatch(context.Background(), ids)
+				srcQs, err := s.srcRepository.GetProcessedQuestionsInBatch(ctx, ids)
 				if err != nil {
 					results <- &result{
 						ids: ids,
@@ -144,16 +153,16 @@ func (s *Service) worker(ctx context.Context,  workerId int, idBatch chan []int3
 					}
 					dstQsParams = append(dstQsParams, p)
 				}
-				count, err := s.dstRepository.CreateQuestionsBatch(context.Background(), dstQsParams)
+				count, err := s.dstRepository.CreateQuestionsBatch(ctx, dstQsParams)
 
 				r := &result{
 					ids: ids,
-					err: nil,
+					err: err,
 					msg: fmt.Sprintf("COUNT = %d", count),
 				}
 
 				results <- r
-				log.Printf("Worker %d FINSIHED batch size %d range from %d to %d with results msg = %s", workerId, len(ids), ids[0], ids[len(ids)-1], r.msg)
+				log.Printf("Worker %d FINISHED batch size %d range from %d to %d with results msg = %s", workerId, len(ids), ids[0], ids[len(ids)-1], r.msg)
 			case <- ctx.Done():
 				log.Printf("Worker %d: context canceled/done from parents, shutting down", workerId)
 				return
