@@ -7,8 +7,6 @@ package srcDB
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getAllIds = `-- name: GetAllIds :many
@@ -35,111 +33,21 @@ func (q *Queries) GetAllIds(ctx context.Context) ([]int32, error) {
 	return items, nil
 }
 
-const getBatchProcessedQuestions = `-- name: GetBatchProcessedQuestions :many
-SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords
-FROM processed_questions
-ORDER BY id
-LIMIT $1 OFFSET $2
-`
-
-type GetBatchProcessedQuestionsParams struct {
-	Limit  int32
-	Offset int32
-}
-
-type GetBatchProcessedQuestionsRow struct {
-	ID              int32
-	Title           string
-	Question        string
-	MultipleChoices string
-	CorrectAnswer   string
-	Explanation     pgtype.Text
-	Keywords        pgtype.Text
-}
-
-func (q *Queries) GetBatchProcessedQuestions(ctx context.Context, arg GetBatchProcessedQuestionsParams) ([]GetBatchProcessedQuestionsRow, error) {
-	rows, err := q.db.Query(ctx, getBatchProcessedQuestions, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetBatchProcessedQuestionsRow
-	for rows.Next() {
-		var i GetBatchProcessedQuestionsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Title,
-			&i.Question,
-			&i.MultipleChoices,
-			&i.CorrectAnswer,
-			&i.Explanation,
-			&i.Keywords,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getProcessedQuestion = `-- name: GetProcessedQuestion :one
-SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords
-FROM processed_questions
-`
-
-type GetProcessedQuestionRow struct {
-	ID              int32
-	Title           string
-	Question        string
-	MultipleChoices string
-	CorrectAnswer   string
-	Explanation     pgtype.Text
-	Keywords        pgtype.Text
-}
-
-func (q *Queries) GetProcessedQuestion(ctx context.Context) (GetProcessedQuestionRow, error) {
-	row := q.db.QueryRow(ctx, getProcessedQuestion)
-	var i GetProcessedQuestionRow
-	err := row.Scan(
-		&i.ID,
-		&i.Title,
-		&i.Question,
-		&i.MultipleChoices,
-		&i.CorrectAnswer,
-		&i.Explanation,
-		&i.Keywords,
-	)
-	return i, err
-}
-
 const getProcessedQuestionsInBatch = `-- name: GetProcessedQuestionsInBatch :many
-SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords
+SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords, link
 FROM processed_questions
 WHERE id = ANY($1::int[])
 `
 
-type GetProcessedQuestionsInBatchRow struct {
-	ID              int32
-	Title           string
-	Question        string
-	MultipleChoices string
-	CorrectAnswer   string
-	Explanation     pgtype.Text
-	Keywords        pgtype.Text
-}
-
-func (q *Queries) GetProcessedQuestionsInBatch(ctx context.Context, dollar_1 []int32) ([]GetProcessedQuestionsInBatchRow, error) {
+func (q *Queries) GetProcessedQuestionsInBatch(ctx context.Context, dollar_1 []int32) ([]ProcessedQuestion, error) {
 	rows, err := q.db.Query(ctx, getProcessedQuestionsInBatch, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetProcessedQuestionsInBatchRow
+	var items []ProcessedQuestion
 	for rows.Next() {
-		var i GetProcessedQuestionsInBatchRow
+		var i ProcessedQuestion
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
@@ -148,6 +56,7 @@ func (q *Queries) GetProcessedQuestionsInBatch(ctx context.Context, dollar_1 []i
 			&i.CorrectAnswer,
 			&i.Explanation,
 			&i.Keywords,
+			&i.Link,
 		); err != nil {
 			return nil, err
 		}

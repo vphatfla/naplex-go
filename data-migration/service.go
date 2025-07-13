@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vphatfla/naplex-go/data-migration/database/dstDB"
@@ -22,7 +25,8 @@ type Service struct {
 	srcRepository *srcDB.Queries
 	dstRepository *dstDB.Queries
 	batchSize     int
-	numWorkder    int
+	numWorker    int
+	multipleChoiceRe *regexp.Regexp
 }
 
 type result struct {
@@ -34,17 +38,34 @@ type result struct {
 func (r *result) ToString() string {
 	return fmt.Sprintf("Ids lens = %d start = %d end = %d with error = %v and msg = %s", len(r.ids), r.ids[0], r.ids[len(r.ids)-1], r.err, r.msg)
 }
-func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, bacthSize int, numWorkder int) *Service {
+func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, bacthSize int, numWorker int) *Service {
 	return &Service{
 		srcRepository: srcDB.New(srcPool),
 		dstRepository: dstDB.New(dstPool),
 		batchSize:     bacthSize,
-		numWorkder:    numWorkder,
+		numWorker:    numWorker,
+		multipleChoiceRe: regexp.MustCompile(multipleChoicesPattern),
 	}
 }
 
 func (s *Service) StartMigration() error {
-	ids, err := s.srcRepository.GetAllIds(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// handle interrupt with Ctrl + C
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		select {
+			case <- sigChan:
+				log.Println("Receied interrupt signal, cancelling mirgation")
+				cancel()
+			case <-ctx.Done():
+				// do nothing
+		}
+	}()
+
+	ids, err := s.srcRepository.GetAllIds(ctx)
 	if err != nil {
 		return err
 	}
@@ -54,9 +75,9 @@ func (s *Service) StartMigration() error {
 	var wg sync.WaitGroup
 
 	// spin up worker
-	for i := 0; i < s.numWorkder; i += 1 {
+	for i := 0; i < s.numWorker; i += 1 {
 		wg.Add(1)
-		go s.worker(i, idBatch, results, &wg)
+		go s.worker(ctx, i, idBatch, results, &wg)
 	}
 
 	// divide ids into batches and send to idBatch channel
@@ -76,62 +97,68 @@ func (s *Service) StartMigration() error {
 		idBatch <- list
 		start += lenList
 	}
-	close(idBatch)
-	wg.Wait()
-
 	for r := range results {
 		log.Println(r.ToString())
 	}
+
+	close(idBatch)
+	wg.Wait()
 	close(results)
 	return nil
 }
 
-func (s *Service) worker(workerId int, idBatch chan []int32, results chan *result, wg *sync.WaitGroup) {
+func (s *Service) worker(ctx context.Context,  workerId int, idBatch chan []int32, results chan *result, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Printf("Worker %d start ", workerId)
-	re := regexp.MustCompile(multipleChoicesPattern)
-	for ids := range idBatch {
-		log.Printf("Worker %d STARTING get  batch size %d range from %d to %d", workerId, len(ids), ids[0], ids[len(ids)-1])
-		//logic
-		srcQs, err := s.srcRepository.GetProcessedQuestionsInBatch(context.Background(), ids)
-		if err != nil {
-			results <- &result{
-				ids: ids,
-				err: err,
+	for {
+		select {
+			case ids, ok := <- idBatch:
+				if !ok {
+					log.Printf("Worker %d: no more work, shutting down", workerId)
+					return
+				}
+
+				srcQs, err := s.srcRepository.GetProcessedQuestionsInBatch(context.Background(), ids)
+				if err != nil {
+					results <- &result{
+						ids: ids,
+						err: err,
+					}
+					continue // move to next batch
+				}
+				var dstQs []dstDB.Question
+				for _, srcQ := range srcQs {
+					dstQs = append(dstQs, processQuestion(&srcQ, s.multipleChoiceRe))
+				}
+
+				var dstQsParams []dstDB.CreateQuestionsBatchParams
+				for _, dstQ := range dstQs {
+					p := dstDB.CreateQuestionsBatchParams{
+						Title:           dstQ.Title,
+						Question:        dstQ.Question,
+						MultipleChoices: dstQ.MultipleChoices,
+						CorrectAnswer:   dstQ.CorrectAnswer,
+						Explanation:     dstQ.Explanation,
+						Keywords:        dstQ.Keywords,
+						Link:            dstQ.Link,
+					}
+					dstQsParams = append(dstQsParams, p)
+				}
+				count, err := s.dstRepository.CreateQuestionsBatch(context.Background(), dstQsParams)
+
+				r := &result{
+					ids: ids,
+					err: nil,
+					msg: fmt.Sprintf("COUNT = %d", count),
+				}
+
+				results <- r
+				log.Printf("Worker %d FINSIHED batch size %d range from %d to %d with results msg = %s", workerId, len(ids), ids[0], ids[len(ids)-1], r.msg)
+			case <- ctx.Done():
+				log.Printf("Worker %d: context canceled/done from parents, shutting down", workerId)
+				return
 			}
 		}
-
-		var dstQs []dstDB.Question
-		for _, srcQ := range srcQs {
-			dstQs = append(dstQs, processQuestion(&srcQ, re))
-		}
-
-		var dstQsParams []dstDB.CreateQuestionsBatchParams
-		for _, dstQ := range dstQs {
-			p := dstDB.CreateQuestionsBatchParams{
-				Title:           dstQ.Title,
-				Question:        dstQ.Question,
-				MultipleChoices: dstQ.MultipleChoices,
-				CorrectAnswer:   dstQ.CorrectAnswer,
-				Explanation:     dstQ.Explanation,
-				Keywords:        dstQ.Keywords,
-				Link:            dstQ.Link,
-			}
-			dstQsParams = append(dstQsParams, p)
-		}
-		count, err := s.dstRepository.CreateQuestionsBatch(context.Background(), dstQsParams)
-
-		r := &result{
-			ids: ids,
-			err: nil,
-			msg: fmt.Sprintf("COUNT = %d", count),
-		}
-
-		results <- r
-		log.Printf("Worker %d FINSIHED batch size %d range from %d to %d with results msg = %s", workerId, len(ids), ids[0], ids[len(ids)-1], r.msg)
-	}
-
-	log.Printf("Worker %d routines FINISHED, closing", workerId)
 }
 
 func processQuestion(srcQ *srcDB.ProcessedQuestion, re *regexp.Regexp) dstDB.Question {
