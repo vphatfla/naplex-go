@@ -1,42 +1,74 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"sync"
 	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
-func worker(jobs chan int, results chan int, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for i := range jobs {
-		fmt.Printf("START: worker job %d\n", i)
-		time.Sleep(time.Second)
-		fmt.Printf("END: worker job %d\n", i)
-		results <- i * 10
+const (
+	BATCH_SIZE = 20
+	NUM_WORKER = 3
+)
+
+func NewPool(ctx context.Context, dbString string) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(dbString)
+	if err != nil {
+		return nil, err
 	}
+
+	config.MaxConns = 3
+	config.MinConns = 2
+	config.MaxConnLifetime = 1 * time.Hour
+	config.MaxConnIdleTime = 30 * time.Minute
+	config.HealthCheckPeriod = 1 * time.Minute
+	config.ConnConfig.ConnectTimeout = 5 * time.Second
+
+	config.AfterConnect = func(ctx context.Context, c *pgx.Conn) error {
+		log.Println("Database >>> New database connection established, adding to pool")
+		return nil
+	}
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	// defer pool.Close()
+
+	if err := pool.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("Can not ping database by pool")
+	}
+
+	return pool, nil
 }
+
 func main() {
 	log.Print("Data Migration")
 
-	jobs := make(chan int)
-	results := make(chan int)
-
-	var wg sync.WaitGroup
-	go func() {
-		for r := range results {
-			fmt.Printf("Result  = %d\n", r)
-		}
-	}()
-
-	for j := 1; j <= 7; j += 1 {
-		wg.Add(1)
-		go worker(jobs, results, &wg)
+	if err := godotenv.Load(); err != nil {
+		log.Panicf("Error loading env variables %v", err)
 	}
 
-	for i := 10; i <= 20; i += 1 {
-		jobs <- i
+	config := LoadConfig()
+
+	srcPool, err := NewPool(context.Background(), config.SrcDBConfig.ToURLString())
+	if err != nil {
+		log.Panicf("Can not init srcDBPool: %v", err)
 	}
-	close(jobs)
-	wg.Wait()
+
+	dstPool, err := NewPool(context.Background(), config.DstDBConfig.ToURLString())
+	if err != nil {
+		log.Panicf("Can not init dstDBPool: %v", err)
+	}
+
+	s := NewService(srcPool, dstPool, BATCH_SIZE, NUM_WORKER)
+
+	if err := s.StartMigration(); err != nil {
+		log.Panicf("Service migration start error: %v", err)
+	}
 }
