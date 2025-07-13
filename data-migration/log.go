@@ -50,7 +50,7 @@ func (w *LogWriter) Close() error {
 	return w.file.Close()
 }
 func createLogFile(dir string) (*os.File, error) {
-	if err := os.Mkdir(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, err
 	}
 
