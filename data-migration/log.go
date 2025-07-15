@@ -50,13 +50,15 @@ func (w *LogWriter) Close() error {
 	return w.file.Close()
 }
 func createLogFile(dir string) (*os.File, error) {
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	pwd, _ := os.Getwd()
+	path := pwd + dir
+	if err := os.MkdirAll(path, 0700); err != nil {
 		return nil, err
 	}
 
 	ts := time.Now().Format("20060102_150405")
 	fileName := fmt.Sprintf("log_%s.log", ts)
-	filePath := filepath.Join(dir, fileName)
+	filePath := filepath.Join(path, fileName)
 
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
 	if err != nil {

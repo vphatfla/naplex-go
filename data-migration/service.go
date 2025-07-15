@@ -17,17 +17,16 @@ import (
 )
 
 const (
-	multipleChoicesPattern = `(?:^|\s)[A-Z]\.\s(.*?)(?=\s[A-Z]\.\s|$)`
+	multipleChoicesPattern = `[A-Z]\.\s([^A-Z]+(?:[A-Z](?!\.\s)[^A-Z]*)*)`
 )
 
 // Migration service
 type Service struct {
-	srcRepository    *srcDB.Queries
-	dstRepository    *dstDB.Queries
-	batchSize        int
-	numWorker        int
-	multipleChoiceRe *regexp.Regexp
-	logWriter        *LogWriter
+	srcRepository *srcDB.Queries
+	dstRepository *dstDB.Queries
+	batchSize     int
+	numWorker     int
+	logWriter     *LogWriter
 }
 
 type result struct {
@@ -41,12 +40,11 @@ func (r *result) ToString() string {
 }
 func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, batchSize int, numWorker int, w *LogWriter) *Service {
 	return &Service{
-		srcRepository:    srcDB.New(srcPool),
-		dstRepository:    dstDB.New(dstPool),
-		batchSize:        batchSize,
-		numWorker:        numWorker,
-		multipleChoiceRe: regexp.MustCompile(multipleChoicesPattern),
-		logWriter:        w,
+		srcRepository: srcDB.New(srcPool),
+		dstRepository: dstDB.New(dstPool),
+		batchSize:     batchSize,
+		numWorker:     numWorker,
+		logWriter:     w,
 	}
 }
 
@@ -120,6 +118,11 @@ func (s *Service) StartMigration() error {
 }
 
 func (s *Service) worker(ctx context.Context, workerId int, idBatch chan []int32, results chan *result, wg *sync.WaitGroup) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Worker %d recover from panic %v", workerId,  r)
+		}
+	}()
 	defer wg.Done()
 	log.Printf("Worker %d start ", workerId)
 	for {
@@ -129,8 +132,9 @@ func (s *Service) worker(ctx context.Context, workerId int, idBatch chan []int32
 				log.Printf("Worker %d: no more work, shutting down", workerId)
 				return
 			}
-
+			log.Printf("Worker %d gets ids len %d id range from %d to %d", workerId, len(ids), ids[0], ids[len(ids)-1])
 			srcQs, err := s.srcRepository.GetProcessedQuestionsInBatch(ctx, ids)
+			log.Printf("Worker %d queried srcDB get count = %d", workerId, len(srcQs))
 			if err != nil {
 				results <- &result{
 					ids: ids,
@@ -140,7 +144,7 @@ func (s *Service) worker(ctx context.Context, workerId int, idBatch chan []int32
 			}
 			var dstQs []dstDB.Question
 			for _, srcQ := range srcQs {
-				dstQs = append(dstQs, processQuestion(&srcQ, s.multipleChoiceRe))
+				dstQs = append(dstQs, processQuestion(&srcQ))
 			}
 
 			var dstQsParams []dstDB.CreateQuestionsBatchParams
@@ -173,7 +177,7 @@ func (s *Service) worker(ctx context.Context, workerId int, idBatch chan []int32
 	}
 }
 
-func processQuestion(srcQ *srcDB.ProcessedQuestion, re *regexp.Regexp) dstDB.Question {
+func processQuestion(srcQ *srcDB.ProcessedQuestion) dstDB.Question {
 	dstQ := dstDB.Question{
 		Title:       srcQ.Title,
 		Question:    srcQ.Question,
@@ -182,17 +186,41 @@ func processQuestion(srcQ *srcDB.ProcessedQuestion, re *regexp.Regexp) dstDB.Que
 		Link:        srcQ.Link,
 	}
 
-	matches := re.FindAllStringSubmatch(srcQ.MultipleChoices, -1)
-
-	var options []string
-	for _, match := range matches {
-		if len(match) > 1 {
-			options = append(options, strings.TrimSpace(match[1]))
-		}
-	}
-
+	options := parseMultipleChoices(srcQ.MultipleChoices)
 	dstQ.MultipleChoices = strings.Join(options, ",")
 	dstQ.CorrectAnswer = strings.TrimSpace(srcQ.CorrectAnswer[2:])
 
 	return dstQ
+}
+
+func parseMultipleChoices(text string) []string {
+	// Pattern to match option markers: A. B. C. etc.
+	optionPattern := regexp.MustCompile(`\b[A-Z]\.\s`)
+
+	// Find all positions where options start
+	matches := optionPattern.FindAllStringIndex(text, -1)
+	if len(matches) == 0 {
+		return []string{}
+	}
+
+	var options []string
+
+	// Extract text between option markers
+	for i := 0; i < len(matches); i++ {
+		start := matches[i][1] // Start after "A. "
+
+		var end int
+		if i < len(matches)-1 {
+			end = matches[i+1][0] // End before next "B. "
+		} else {
+			end = len(text) // Last option goes to end
+		}
+
+		option := strings.TrimSpace(text[start:end])
+		if option != "" {
+			options = append(options, option)
+		}
+	}
+
+	return options
 }
