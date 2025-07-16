@@ -20,47 +20,13 @@ func NewLogger(dir string, prefix string) (*log.Logger, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	mw := io.MultiWriter(os.Stdout, f)
 
 	return log.New(mw, prefix, log.Ldate), nil
 }
 
-func NewLogWrite(dir string) (*LogWriter, error) {
-	file, err := createLogFile(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	return &LogWriter{
-		file:   file,
-		writer: bufio.NewWriter(file),
-	}, nil
-}
-
-func (w *LogWriter) Write(r *result) error {
-	ts := time.Now().Format("2006-01-02 15:04:05.000")
-
-	status := "SUCCESS"
-	if r.err != nil {
-		status = "FAILED"
-	}
-
-	entry := fmt.Sprintf("[%s] %s: %s\n", ts, status, r.ToString())
-
-	if _, err := w.writer.WriteString(entry); err != nil {
-		return err
-	}
-
-	return w.writer.Flush() // write buffered data into file
-}
-
-func (w *LogWriter) Close() error {
-	if err := w.writer.Flush(); err != nil {
-		return err
-	}
-	return w.file.Close()
-}
 func createLogFile(dir string) (*os.File, error) {
 	pwd, _ := os.Getwd()
 	path := pwd + dir

@@ -36,7 +36,7 @@ func (q *Queries) GetAllIds(ctx context.Context) ([]int32, error) {
 const getProcessedQuestionsInBatch = `-- name: GetProcessedQuestionsInBatch :many
 SELECT id, title, question, multiple_choices, correct_answer, explanation, keywords, link
 FROM processed_questions
-WHERE id = ANY($1::int[])
+WHERE id = ANY($1::int[]) AND correct_answer <> ''
 `
 
 func (q *Queries) GetProcessedQuestionsInBatch(ctx context.Context, dollar_1 []int32) ([]ProcessedQuestion, error) {

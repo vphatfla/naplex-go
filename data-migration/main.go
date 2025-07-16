@@ -12,12 +12,14 @@ import (
 )
 
 const (
-	BATCH_SIZE = 20
-	NUM_WORKER = 3
-	LOG_DIR    = "/log"
+	BATCH_SIZE  = 20
+	NUM_WORKER  = 3
+	LOG_DIR     = "/log"
+	SRC_DB_NAME = "Source Postgres DB"
+	DST_DB_NAME = "Destination Postgres DB"
 )
 
-func NewPool(ctx context.Context, dbString string) (*pgxpool.Pool, error) {
+func NewPool(ctx context.Context, dbString string, name string) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(dbString)
 	if err != nil {
 		return nil, err
@@ -31,7 +33,7 @@ func NewPool(ctx context.Context, dbString string) (*pgxpool.Pool, error) {
 	config.ConnConfig.ConnectTimeout = 5 * time.Second
 
 	config.AfterConnect = func(ctx context.Context, c *pgx.Conn) error {
-		log.Println("Database >>> New database connection established, adding to pool")
+		log.Printf("Database %s >>> New database connection established, adding to pool", name)
 		return nil
 	}
 
@@ -57,23 +59,21 @@ func main() {
 
 	config := LoadConfig()
 
-	srcPool, err := NewPool(context.Background(), config.SrcDBConfig.ToURLString())
+	srcPool, err := NewPool(context.Background(), config.SrcDBConfig.ToURLString(), SRC_DB_NAME)
 	if err != nil {
 		log.Panicf("Can not init srcDBPool: %v", err)
 	}
 
-	dstPool, err := NewPool(context.Background(), config.DstDBConfig.ToURLString())
+	dstPool, err := NewPool(context.Background(), config.DstDBConfig.ToURLString(), DST_DB_NAME)
 	if err != nil {
 		log.Panicf("Can not init dstDBPool: %v", err)
 	}
 
-	logWriter, err := NewLogWrite(LOG_DIR)
+	s, err := NewService(srcPool, dstPool, BATCH_SIZE, NUM_WORKER, LOG_DIR)
 	if err != nil {
-		log.Panicf("LogWriter creating failed: %v", err)
+		log.Panicf("Error initializing the migration service %v", err)
 	}
-	defer logWriter.Close()
 
-	s := NewService(srcPool, dstPool, BATCH_SIZE, NUM_WORKER, logWriter)
 	if err := s.StartMigration(); err != nil {
 		log.Panicf("Service migration start error: %v", err)
 	}
