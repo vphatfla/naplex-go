@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,6 +13,17 @@ import (
 type LogWriter struct {
 	file   *os.File
 	writer *bufio.Writer
+}
+
+func NewLogger(dir string, prefix string) (*log.Logger, error) {
+	f, err := createLogFile(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	mw := io.MultiWriter(os.Stdout, f)
+
+	return log.New(mw, prefix, log.Ldate), nil
 }
 
 func NewLogWrite(dir string) (*LogWriter, error) {

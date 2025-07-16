@@ -26,7 +26,7 @@ type Service struct {
 	dstRepository *dstDB.Queries
 	batchSize     int
 	numWorker     int
-	logWriter     *LogWriter
+	logger        *log.Logger
 }
 
 type result struct {
@@ -38,14 +38,19 @@ type result struct {
 func (r *result) ToString() string {
 	return fmt.Sprintf("Ids lens = %d start = %d end = %d with error = %v and msg = %s", len(r.ids), r.ids[0], r.ids[len(r.ids)-1], r.err, r.msg)
 }
-func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, batchSize int, numWorker int, w *LogWriter) *Service {
+
+func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, batchSize int, numWorker int, dir string) (*Service, error) {
+	l, err := NewLogger(dir, "Service")
+	if err != nil {
+		return nil, err
+	}
 	return &Service{
 		srcRepository: srcDB.New(srcPool),
 		dstRepository: dstDB.New(dstPool),
 		batchSize:     batchSize,
 		numWorker:     numWorker,
-		logWriter:     w,
-	}
+		logger:        l,
+	}, nil
 }
 
 func (s *Service) StartMigration() error {
@@ -58,7 +63,7 @@ func (s *Service) StartMigration() error {
 	go func() {
 		select {
 		case <-sigChan:
-			log.Println("Received interrupt signal, cancelling migration")
+			s.logger.Println("Received interrupt signal, cancelling migration")
 			cancel()
 		case <-ctx.Done():
 			// do nothing
@@ -79,10 +84,9 @@ func (s *Service) StartMigration() error {
 	resultDone := make(chan struct{})
 	go func() {
 		for r := range results {
-			s.logWriter.Write(r)
-			log.Println(r.ToString())
+			s.logger.Println(r.ToString())
 		}
-		log.Printf("Results processing FINISHED")
+		s.logger.Printf("Results processing FINISHED")
 		close(resultDone)
 	}()
 
@@ -120,21 +124,21 @@ func (s *Service) StartMigration() error {
 func (s *Service) worker(ctx context.Context, workerId int, idBatch chan []int32, results chan *result, wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Worker %d recover from panic %v", workerId,  r)
+			s.logger.Printf("Worker %d recover from panic %v", workerId, r)
 		}
 	}()
 	defer wg.Done()
-	log.Printf("Worker %d start ", workerId)
+	s.logger.Printf("Worker %d start ", workerId)
 	for {
 		select {
 		case ids, ok := <-idBatch:
 			if !ok {
-				log.Printf("Worker %d: no more work, shutting down", workerId)
+				s.logger.Printf("Worker %d: no more work, shutting down", workerId)
 				return
 			}
-			log.Printf("Worker %d gets ids len %d id range from %d to %d", workerId, len(ids), ids[0], ids[len(ids)-1])
+			s.logger.Printf("Worker %d gets ids len %d id range from %d to %d", workerId, len(ids), ids[0], ids[len(ids)-1])
 			srcQs, err := s.srcRepository.GetProcessedQuestionsInBatch(ctx, ids)
-			log.Printf("Worker %d queried srcDB get count = %d", workerId, len(srcQs))
+			s.logger.Printf("Worker %d queried srcDB get count = %d", workerId, len(srcQs))
 			if err != nil {
 				results <- &result{
 					ids: ids,
@@ -169,9 +173,9 @@ func (s *Service) worker(ctx context.Context, workerId int, idBatch chan []int32
 			}
 
 			results <- r
-			log.Printf("Worker %d FINISHED batch size %d range from %d to %d with results msg = %s", workerId, len(ids), ids[0], ids[len(ids)-1], r.msg)
+			s.logger.Printf("Worker %d FINISHED batch size %d range from %d to %d with results msg = %s", workerId, len(ids), ids[0], ids[len(ids)-1], r.msg)
 		case <-ctx.Done():
-			log.Printf("Worker %d: context canceled/done from parents, shutting down", workerId)
+			s.logger.Printf("Worker %d: context canceled/done from parents, shutting down", workerId)
 			return
 		}
 	}
