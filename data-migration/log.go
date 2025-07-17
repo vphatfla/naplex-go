@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -11,20 +10,24 @@ import (
 )
 
 type LogWriter struct {
-	file   *os.File
-	writer *bufio.Writer
+	File   *os.File
+	Logger *log.Logger
 }
 
-func NewLogger(dir string, prefix string) (*log.Logger, error) {
+func NewLogWriter(dir string, prefix string) (*LogWriter, error) {
 	f, err := createLogFile(dir)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
 
-	mw := io.MultiWriter(os.Stdout, f)
+	mw := io.MultiWriter(f, os.Stdout)
 
-	return log.New(mw, prefix, log.Ldate), nil
+	l := log.New(mw, prefix, log.Ldate)
+
+	return &LogWriter{
+		File:   f,
+		Logger: l,
+	}, nil
 }
 
 func createLogFile(dir string) (*os.File, error) {

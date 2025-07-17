@@ -27,6 +27,7 @@ type Service struct {
 	batchSize     int
 	numWorker     int
 	logger        *log.Logger
+	logFile       *os.File
 }
 
 type result struct {
@@ -40,7 +41,7 @@ func (r *result) ToString() string {
 }
 
 func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, batchSize int, numWorker int, dir string) (*Service, error) {
-	l, err := NewLogger(dir, "Service")
+	l, err := NewLogWriter(dir, "Service")
 	if err != nil {
 		return nil, err
 	}
@@ -49,12 +50,19 @@ func NewService(srcPool *pgxpool.Pool, dstPool *pgxpool.Pool, batchSize int, num
 		dstRepository: dstDB.New(dstPool),
 		batchSize:     batchSize,
 		numWorker:     numWorker,
-		logger:        l,
+		logger:        l.Logger,
+		logFile:       l.File,
 	}, nil
 }
 
 func (s *Service) StartMigration() error {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		if err := s.logFile.Close(); err != nil {
+			log.Printf("Closing log file error :%s", err) // only os.Stdout
+		}
+	}()
+
 	defer cancel()
 
 	// handle interrupt with Ctrl + C
