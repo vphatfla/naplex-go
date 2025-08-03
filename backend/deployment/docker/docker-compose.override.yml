@@ -1,0 +1,9 @@
+services:
+  naplex-postgres-db:
+   environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=app_db
+    ports:
+      - "5432:5432"
+

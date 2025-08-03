@@ -18,6 +18,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   questionNumber,
   totalQuestions,
 }) => {
+  console.log(question)
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);

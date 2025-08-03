@@ -1,0 +1,12 @@
+services:
+  naplex-postgres-db:
+   ports:
+      - "5432:5432"
+    volumes:
+      - naplex_postgres_data:/var/lib/postgresql/data
+      - ../../migrations/:/docker-entrypoint-initdb.d
+      - /etc/docker/secrets/postgres_password:/run/secrets/postgres_password:ro
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+      - POSTGRES_DB=app_db

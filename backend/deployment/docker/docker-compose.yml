@@ -3,12 +3,6 @@ services:
     image: postgres:17-alpine
     container_name: naplex-postgres-db
     restart: on-failure
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=app_db
-    ports:
-      - "5432:5432"
     volumes:
       - naplex_postgres_data:/var/lib/postgresql/data
       - ../../migrations/:/docker-entrypoint-initdb.d
