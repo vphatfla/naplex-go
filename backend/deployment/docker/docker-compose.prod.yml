@@ -1,6 +1,6 @@
 services:
   naplex-postgres-db:
-   ports:
+    ports:
       - "5432:5432"
     volumes:
       - naplex_postgres_data:/var/lib/postgresql/data
