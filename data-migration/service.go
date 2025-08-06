@@ -198,10 +198,12 @@ func processQuestion(srcQ *srcDB.ProcessedQuestion) dstDB.Question {
 		Link:        srcQ.Link,
 	}
 
-	options := parseMultipleChoices(srcQ.MultipleChoices)
-	dstQ.MultipleChoices = strings.Join(options, ",")
-	dstQ.CorrectAnswer = strings.TrimSpace(srcQ.CorrectAnswer[2:])
+	// options := parseMultipleChoices(srcQ.MultipleChoices)
+	// dstQ.MultipleChoices = strings.Join(options, ",")
+	// dstQ.CorrectAnswer = strings.TrimSpace(srcQ.CorrectAnswer[2:])
 
+	dstQ.MultipleChoices = srcQ.MultipleChoices;
+	dstQ.CorrectAnswer = srcQ.CorrectAnswer;
 	return dstQ
 }
 
