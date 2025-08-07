@@ -27,7 +27,7 @@ func (c *DBConfig) ToURLString() string {
 }
 
 func LoadConfig() *Config {
-	if os.Getenv("DOCKER_DEV") == "true" {
+	if os.Getenv("DOCKER_PROD") == "true" {
 		os.Setenv("POSTGRES_HOST", "naplex-postgres-db")
 	}
 	return &Config{
