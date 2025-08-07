@@ -8,3 +8,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
       - POSTGRES_DB=app_db
+
+  naplex-backed:
+    environment:
+      - DOCKER_PROD=true
