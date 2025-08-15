@@ -12,6 +12,7 @@ type Config struct {
 	OAuth2Config *oauth2.Config
 	CookieSecret []byte
 	DBConfig     *DBConfig
+	FrontEndRedirectPageURI string
 }
 
 type DBConfig struct {
@@ -27,9 +28,9 @@ func (c *DBConfig) ToURLString() string {
 }
 
 func LoadConfig() *Config {
-	if os.Getenv("DOCKER_PROD") == "true" {
+	/* if os.Getenv("DOCKER_PROD") == "true" {
 		os.Setenv("POSTGRES_HOST", "naplex-postgres-db")
-	}
+	} */
 	return &Config{
 		OAuth2Config: &oauth2.Config{
 			ClientID:     os.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
@@ -50,5 +51,6 @@ func LoadConfig() *Config {
 			Host:     os.Getenv("POSTGRES_HOST"),
 			Port:     os.Getenv("POSTGRES_PORT"),
 		},
+		FrontEndRedirectPageURI: os.Getenv("FRONTEND_REDIRECT_URI"),
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
@@ -18,7 +19,9 @@ import (
 func main() {
 	log.Printf("Hello from naplex go backend")
 
-	if err := godotenv.Load(); err != nil {
+	if os.Getenv("DOCKER") == "true" {
+		log.Println("Docker container running, no need to use godotenv to load")
+	} else if err := godotenv.Load(); err != nil {
 		log.Fatalf("Failed loading env %v", err)
 	}
 

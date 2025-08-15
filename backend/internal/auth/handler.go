@@ -125,7 +125,7 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, cookie)
-	http.Redirect(w, r, "http://localhost:5173/callback", http.StatusPermanentRedirect)
+	http.Redirect(w, r, h.config.FrontEndRedirectPageURI, http.StatusPermanentRedirect)
 }
 
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {

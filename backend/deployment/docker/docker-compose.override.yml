@@ -1,9 +1,12 @@
 services:
   naplex-postgres-db:
-   environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=app_db
+    env_file:
+      - path: ../../.env
     ports:
       - "5432:5432"
 
+  backend:
+    env_file:
+      - path: ../../.env
+    environment:
+      - DOCKER=true

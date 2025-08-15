@@ -1,14 +1,13 @@
 services:
   naplex-postgres-db:
+    env_file:
+      - path: ../../.env.prod
     volumes:
       - naplex_postgres_data:/var/lib/postgresql/data
       - ../../migrations/:/docker-entrypoint-initdb.d
-      - /etc/docker/secrets/postgres_password:/run/secrets/postgres_password:ro
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
-      - POSTGRES_DB=app_db
 
   backend:
+    env_file:
+      - path: ../../.env.prod
     environment:
-      - DOCKER_PROD=true
+      - DOCKER=true
