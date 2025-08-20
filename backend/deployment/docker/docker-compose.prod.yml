@@ -1,12 +1,15 @@
 services:
   naplex-postgres-db:
+    networks:
+      - app_network
     env_file:
       - path: ../../.env.prod
     volumes:
-      - naplex_postgres_data:/var/lib/postgresql/data
-      - ../../migrations/:/docker-entrypoint-initdb.d
+      - naplex_postgres_data_prod:/var/lib/postgresql/data
 
   backend:
+    networks:
+      - app_network
     env_file:
       - path: ../../.env.prod
     environment:

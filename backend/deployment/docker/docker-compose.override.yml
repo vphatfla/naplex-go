@@ -1,11 +1,15 @@
 services:
   naplex-postgres-db:
+    network_mode: "host"
+    volumes:
+      - naplex_postgres_data_dev:/var/lib/postgresql/data
     env_file:
       - path: ../../.env
     ports:
       - "5432:5432"
 
   backend:
+    network_mode: "host"
     env_file:
       - path: ../../.env
     environment:
