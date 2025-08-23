@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/vphatfla/naplex-go/backend/internal/auth"
 	"github.com/vphatfla/naplex-go/backend/internal/config"
+	"github.com/vphatfla/naplex-go/backend/internal/dataTransfer"
 	"github.com/vphatfla/naplex-go/backend/internal/middleware"
 	"github.com/vphatfla/naplex-go/backend/internal/question"
 	"github.com/vphatfla/naplex-go/backend/internal/shared/database"
@@ -40,6 +41,7 @@ func main() {
 	authModule := auth.NewModule(config, queries)
 	userModule := user.NewModule(queries)
 	questionModule := question.NewModule(queries)
+	dataTransferModule := dataTransfer.NewModule(queries)
 	// Middleware declare
 	authM := auth.NewMiddleware(config)
 	// chi router
@@ -72,6 +74,12 @@ func main() {
 		r.Get("/failed", questionModule.Handler.HandlerGetAllFailedQuestion)
 
 		r.Get("/daily", questionModule.Handler.HandlerGetRandomDailyQuestion)
+	})
+
+	// Strictly Internal
+	r.Route("/internal", func(r chi.Router) {
+		r.Use(authM.RequireAPIKEYInternal)
+		r.Post("/data/upload", dataTransferModule.Handler.HandleInsertQuestionsBatch)
 	})
 
 	port := ":8080"

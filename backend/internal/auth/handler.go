@@ -13,27 +13,29 @@ import (
 )
 
 type Handler struct {
-	config *config.Config
+	config        *config.Config
 	cookieManager *CookieManager
-	s *Service
+	s             *Service
 }
 
 func NewHandler(config *config.Config, s *Service) *Handler {
 	return &Handler{
-		config: config,
+		config:        config,
 		cookieManager: NewCookieManager(config.CookieSecret),
-		s: s,
+		s:             s,
 	}
 }
 
-/* func (h *Handler) RegisterRouter() *http.ServeMux {
-	m := http.NewServeMux()
+/*
+	 func (h *Handler) RegisterRouter() *http.ServeMux {
+		m := http.NewServeMux()
 
-	m.Handle("GET /google/login", http.HandlerFunc(h.HandleGoogleLogin))
-	m.Handle("GET /google/callback", http.HandlerFunc(h.HandleGoogleCallback))
+		m.Handle("GET /google/login", http.HandlerFunc(h.HandleGoogleLogin))
+		m.Handle("GET /google/callback", http.HandlerFunc(h.HandleGoogleCallback))
 
-	return m
-}*/
+		return m
+	}
+*/
 func (h *Handler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := h.s.GenerateStateToken()
 	if err != nil {
@@ -42,8 +44,8 @@ func (h *Handler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie, err := h.cookieManager.CreateCookie("oauth_state", map[string]string{
-        "state": state,
-    }, 600) // 10 minutes)
+		"state": state,
+	}, 600) // 10 minutes)
 
 	if err != nil {
 		utils.HTTPJsonError(w, err.Error(), http.StatusInternalServerError)
@@ -79,12 +81,12 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-        Name:     "oauth_state",
-        Value:    "",
-        Path:     "/",
-        MaxAge:   -1,
-        HttpOnly: true,
-    })
+		Name:     "oauth_state",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
 
 	code := r.FormValue("code")
 	if code == "" {
@@ -113,9 +115,9 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	// create session data
 	session := Session{
-		UserID: u.ID,
-		Email: u.Email,
-		Name: u.Name,
+		UserID:    u.ID,
+		Email:     u.Email,
+		Name:      u.Name,
 		ExpiresAt: time.Now().Add(7 * 24 * time.Hour), // 7 days
 	}
 
@@ -130,12 +132,12 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
-        Name:     "session",
-        Value:    "",
-        Path:     "/",
-        MaxAge:   -1,
-        HttpOnly: true,
-    })
+		Name:     "session",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
 	utils.HTTPJsonResponse(w, map[string]bool{
 		"success": true,
 	})

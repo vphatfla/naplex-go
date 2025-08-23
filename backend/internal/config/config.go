@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	OAuth2Config *oauth2.Config
-	CookieSecret []byte
-	DBConfig     *DBConfig
+	OAuth2Config            *oauth2.Config
+	CookieSecret            []byte
+	DBConfig                *DBConfig
 	FrontEndRedirectPageURI string
+	APIKeyInternal          string
 }
 
 type DBConfig struct {
@@ -52,5 +53,6 @@ func LoadConfig() *Config {
 			Port:     os.Getenv("POSTGRES_PORT"),
 		},
 		FrontEndRedirectPageURI: os.Getenv("FRONTEND_REDIRECT_URI"),
+		APIKeyInternal:          os.Getenv("API_KEY_INTERNAL"),
 	}
 }

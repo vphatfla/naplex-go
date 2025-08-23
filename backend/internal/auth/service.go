@@ -23,13 +23,14 @@ func NewService(q *database.Queries) *Service {
 		q: q,
 	}
 }
+
 type GoogleUserInfo struct {
 	ID        string `json:"id"`
 	FirstName string `json:"given_name"`
 	LastName  string `json:"family_name"`
 	Name      string `json:"name"`
 	Picture   string `json:"picture"`
-	Email string `json:"email"`
+	Email     string `json:"email"`
 }
 
 func (s *Service) GetGoogleUserInfo(ctx context.Context, token *oauth2.Token) (*GoogleUserInfo, error) {
@@ -56,22 +57,22 @@ func (s *Service) GetGoogleUserInfo(ctx context.Context, token *oauth2.Token) (*
 
 // GenerateStateToken creates a secure random state token
 func (s *Service) GenerateStateToken() (string, error) {
-    bytes := make([]byte, 32)
-    if _, err := rand.Read(bytes); err != nil {
-        return "", err
-    }
-    return base64.URLEncoding.EncodeToString(bytes), nil
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
 }
 
 // CreateOrUpdateUser take GoogleUserInfo as an argurment and call the querier to create/update the user
 func (s *Service) CreateOrUpdateUser(ctx context.Context, gU *GoogleUserInfo) (*database.User, error) {
 	params := &database.CreateOrUpsertUserParams{
-		GoogleID: gU.ID,
-		Email: gU.Email,
-		Name: gU.Name,
+		GoogleID:  gU.ID,
+		Email:     gU.Email,
+		Name:      gU.Name,
 		FirstName: pgtype.Text{String: gU.FirstName, Valid: true},
-		LastName: pgtype.Text{String: gU.LastName, Valid: true},
-		Picture: pgtype.Text{String: gU.Picture, Valid: true},
+		LastName:  pgtype.Text{String: gU.LastName, Valid: true},
+		Picture:   pgtype.Text{String: gU.Picture, Valid: true},
 	}
 
 	u, err := s.q.CreateOrUpsertUser(ctx, *params)
