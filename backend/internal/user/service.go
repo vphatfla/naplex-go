@@ -23,12 +23,12 @@ func NewService(queries *database.Queries) *Service {
 // CreateOrUpdateUser take GoogleUserInfo as an argurment and call the querier to create/update the user
 func (s *Service) CreateOrUpdateUser(ctx context.Context, gU *auth.GoogleUserInfo) (*database.User, error) {
 	params := &database.CreateOrUpsertUserParams{
-		GoogleID: gU.ID,
-		Email: gU.Email,
-		Name: gU.Name,
+		GoogleID:  gU.ID,
+		Email:     gU.Email,
+		Name:      gU.Name,
 		FirstName: pgtype.Text{String: gU.FirstName, Valid: true},
-		LastName: pgtype.Text{String: gU.LastName, Valid: true},
-		Picture: pgtype.Text{String: gU.Picture, Valid: true},
+		LastName:  pgtype.Text{String: gU.LastName, Valid: true},
+		Picture:   pgtype.Text{String: gU.Picture, Valid: true},
 	}
 
 	u, err := s.q.CreateOrUpsertUser(ctx, *params)
@@ -49,11 +49,11 @@ func (s *Service) GetUserProfile(ctx context.Context, id int32) (*database.User,
 
 func (s *Service) UpdateUserProfile(ctx context.Context, u *database.User) (*database.User, error) {
 	params := &database.UpdateUserProfileParams{
-		ID: u.ID,
-		Name: u.Name,
+		ID:        u.ID,
+		Name:      u.Name,
 		FirstName: u.FirstName,
-		LastName: u.LastName,
-		Picture: u.Picture,
+		LastName:  u.LastName,
+		Picture:   u.Picture,
 	}
 
 	newU, err := s.q.UpdateUserProfile(ctx, *params)

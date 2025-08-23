@@ -41,12 +41,12 @@ func (h *Handler) HandleGetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uRes := &User{
-		ID: u.ID,
-		Name: u.Name,
+		ID:        u.ID,
+		Name:      u.Name,
 		FirstName: u.FirstName.String,
-		LastName: u.LastName.String,
-		Email: u.Email,
-		Picture: u.Picture.String,
+		LastName:  u.LastName.String,
+		Email:     u.Email,
+		Picture:   u.Picture.String,
 	}
 	utils.HTTPJsonResponse(w, uRes)
 	return
@@ -72,12 +72,12 @@ func (h *Handler) HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uInput := &database.User{
-		ID: u.ID,
-		GoogleID: "", // empty, update query do not allow/use google_id
-		FirstName: pgtype.Text{ String: u.FirstName, Valid: true },
-		LastName: pgtype.Text{ String: u.LastName, Valid: true },
-		Name: u.Name,
-		Picture: pgtype.Text{ String: u.Picture, Valid: true },
+		ID:        u.ID,
+		GoogleID:  "", // empty, update query do not allow/use google_id
+		FirstName: pgtype.Text{String: u.FirstName, Valid: true},
+		LastName:  pgtype.Text{String: u.LastName, Valid: true},
+		Name:      u.Name,
+		Picture:   pgtype.Text{String: u.Picture, Valid: true},
 	}
 
 	uRes, err := h.s.UpdateUserProfile(context.Background(), uInput)

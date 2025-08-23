@@ -155,6 +155,16 @@ func (q *Queries) CreateOrUpsertUser(ctx context.Context, arg CreateOrUpsertUser
 	return i, err
 }
 
+type CreateQuestionsBatchParams struct {
+	Title           string
+	Question        string
+	MultipleChoices string
+	CorrectAnswer   string
+	Explanation     pgtype.Text
+	Keywords        pgtype.Text
+	Link            pgtype.Text
+}
+
 const createUser = `-- name: CreateUser :one
 
 INSERT INTO users (

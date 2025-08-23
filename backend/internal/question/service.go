@@ -40,9 +40,9 @@ func (s *Service) GetQuestion(ctx context.Context, uid int32, qid int32) (*Quest
 	if err == pgx.ErrNoRows {
 		uq = database.UsersQuestion{
 			Attempts: pgtype.Int4{Int32: 0, Valid: true},
-			Saved: pgtype.Bool{Bool: false, Valid: true},
-			Hidden: pgtype.Bool{Bool: false, Valid: true},
-			Status: database.NullQuestionStatus{QuestionStatus: database.QuestionStatusNA},
+			Saved:    pgtype.Bool{Bool: false, Valid: true},
+			Hidden:   pgtype.Bool{Bool: false, Valid: true},
+			Status:   database.NullQuestionStatus{QuestionStatus: database.QuestionStatusNA},
 		}
 	}
 
@@ -52,12 +52,12 @@ func (s *Service) GetQuestion(ctx context.Context, uid int32, qid int32) (*Quest
 
 func (s *Service) CreateOrUpdateUserQuestion(ctx context.Context, uid int32, qDTO *QuestionDTO) (*QuestionDTO, error) {
 	params := &database.CreateOrUpdateUserQuestionParams{
-		Column1: qDTO.Status,
+		Column1:  qDTO.Status,
 		Attempts: pgtype.Int4{Int32: qDTO.Attempts, Valid: true},
-		Saved: pgtype.Bool{Bool: qDTO.Saved, Valid: true},
-		Hidden: pgtype.Bool{Bool: qDTO.Hidden, Valid: true},
-		Uid: uid,
-		Qid: qDTO.ID,
+		Saved:    pgtype.Bool{Bool: qDTO.Saved, Valid: true},
+		Hidden:   pgtype.Bool{Bool: qDTO.Hidden, Valid: true},
+		Uid:      uid,
+		Qid:      qDTO.ID,
 	}
 	uq, err := s.q.CreateOrUpdateUserQuestion(ctx, *params)
 	if err != nil {
@@ -78,20 +78,20 @@ func (s *Service) GetAllPassedQuestion(ctx context.Context, uid int32) ([]Questi
 	}
 	var list []QuestionDTO
 
-	for _,item := range temp {
+	for _, item := range temp {
 		qDTO := &QuestionDTO{
-			ID: item.Qid,
-			Title: item.Title,
-			Question: item.Question,
+			ID:               item.Qid,
+			Title:            item.Title,
+			Question:         item.Question,
 			Multiple_choices: strings.Split(item.MultipleChoices, "\n"),
-			Correct_answer: item.CorrectAnswer,
-			Explanation: item.Explanation.String,
-			Keywords: strings.Split(item.Keywords.String, ","),
-			Link: item.Link.String,
-			Status: item.Status.QuestionStatus,
-			Attempts: item.Attempts.Int32,
-			Saved: item.Saved.Bool,
-			Hidden: item.Hidden.Bool,
+			Correct_answer:   item.CorrectAnswer,
+			Explanation:      item.Explanation.String,
+			Keywords:         strings.Split(item.Keywords.String, ","),
+			Link:             item.Link.String,
+			Status:           item.Status.QuestionStatus,
+			Attempts:         item.Attempts.Int32,
+			Saved:            item.Saved.Bool,
+			Hidden:           item.Hidden.Bool,
 		}
 		list = append(list, *qDTO)
 	}
@@ -106,20 +106,20 @@ func (s *Service) GetAllFailedQuestion(ctx context.Context, uid int32) ([]Questi
 	}
 
 	var list []QuestionDTO
-	for _,item := range temp {
+	for _, item := range temp {
 		qDTO := &QuestionDTO{
-			ID: item.Qid,
-			Title: item.Title,
-			Question: item.Question,
+			ID:               item.Qid,
+			Title:            item.Title,
+			Question:         item.Question,
 			Multiple_choices: strings.Split(item.MultipleChoices, "\n"),
-			Correct_answer: item.CorrectAnswer,
-			Explanation: item.Explanation.String,
-			Keywords: strings.Split(item.Keywords.String, ","),
-			Link: item.Link.String,
-			Status: item.Status.QuestionStatus,
-			Attempts: item.Attempts.Int32,
-			Saved: item.Saved.Bool,
-			Hidden: item.Hidden.Bool,
+			Correct_answer:   item.CorrectAnswer,
+			Explanation:      item.Explanation.String,
+			Keywords:         strings.Split(item.Keywords.String, ","),
+			Link:             item.Link.String,
+			Status:           item.Status.QuestionStatus,
+			Attempts:         item.Attempts.Int32,
+			Saved:            item.Saved.Bool,
+			Hidden:           item.Hidden.Bool,
 		}
 		list = append(list, *qDTO)
 	}
@@ -129,7 +129,7 @@ func (s *Service) GetAllFailedQuestion(ctx context.Context, uid int32) ([]Questi
 
 func (s *Service) GetRandomDailyQuestions(ctx context.Context, uid int32, numQuestion int32) ([]QuestionDTO, error) {
 	params := &database.GetRandomDailyQuestionsParams{
-		Uid: uid,
+		Uid:   uid,
 		Limit: numQuestion,
 	}
 
@@ -139,20 +139,20 @@ func (s *Service) GetRandomDailyQuestions(ctx context.Context, uid int32, numQue
 	}
 
 	var list []QuestionDTO
-	for _,item := range temp {
+	for _, item := range temp {
 		qDTO := &QuestionDTO{
-			ID: item.Qid,
-			Title: item.Title,
-			Question: item.Question,
+			ID:               item.Qid,
+			Title:            item.Title,
+			Question:         item.Question,
 			Multiple_choices: strings.Split(item.MultipleChoices, "\n"),
-			Correct_answer: item.CorrectAnswer,
-			Explanation: item.Explanation.String,
-			Keywords: strings.Split(item.Keywords.String, ","),
-			Link: item.Link.String,
-			Status: item.Status.QuestionStatus,
-			Attempts: item.Attempts,
-			Saved: item.Saved,
-			Hidden: item.Hidden,
+			Correct_answer:   item.CorrectAnswer,
+			Explanation:      item.Explanation.String,
+			Keywords:         strings.Split(item.Keywords.String, ","),
+			Link:             item.Link.String,
+			Status:           item.Status.QuestionStatus,
+			Attempts:         item.Attempts,
+			Saved:            item.Saved,
+			Hidden:           item.Hidden,
 		}
 		list = append(list, *qDTO)
 	}

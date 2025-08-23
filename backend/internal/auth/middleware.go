@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/vphatfla/naplex-go/backend/internal/config"
@@ -16,11 +17,13 @@ const (
 
 type Middleware struct {
 	cookieManager *CookieManager
+	apiKeyInteral string
 }
 
 func NewMiddleware(config *config.Config) *Middleware {
 	return &Middleware{
 		cookieManager: NewCookieManager(config.CookieSecret),
+		apiKeyInteral: config.APIKeyInternal,
 	}
 }
 
@@ -55,4 +58,28 @@ func getSessionDataFromContext(ctx context.Context) *Session {
 		return nil
 	}
 	return session
+}
+
+func (m *Middleware) RequireAPIKEYInternal(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			utils.HTTPJsonError(w, "Missing Authorization Header", http.StatusUnauthorized)
+			return
+		}
+
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			utils.HTTPJsonError(w, "Missing Bearer Token", http.StatusUnauthorized)
+			return
+		}
+
+		requestKey := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+
+		if requestKey != m.apiKeyInteral {
+			utils.HTTPJsonError(w, "Invalid Bearer Token", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
