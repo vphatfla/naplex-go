@@ -32,5 +32,5 @@ func (h *Handler) HandleInsertQuestionsBatch(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.HTTPJsonResponse(w, map[string]string{"count": string(count)})
+	utils.HTTPJsonResponse(w, map[string]int{"count": int(count)})
 }

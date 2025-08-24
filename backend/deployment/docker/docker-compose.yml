@@ -5,10 +5,6 @@ services:
     restart: on-failure
     volumes:
       - ../../migrations/:/docker-entrypoint-initdb.d
-    #environment:  
-     # - POSTGRES_PASSWORD:${POSTGRES_PASSWORD}
-    #networks:
-     # - app_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -25,8 +21,6 @@ services:
       DOCKER_DEV: true
     ports:
       - "8080:8080"
-    #networks:
-     # - app_network
     depends_on:
       naplex-postgres-db:
         condition: service_healthy
